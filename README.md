@@ -110,8 +110,7 @@ matplot(sol$t,udf,"l",col=1:3)
 Now we can use the Plotly package to draw a phase plot:
 
 ```R
-library(plotly)
-plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
+plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
 ```
 
 ![plotly_plot](https://user-images.githubusercontent.com/1814174/39012384-27ee7262-43c9-11e8-84d2-1edf937288ae.png)
@@ -133,7 +132,7 @@ reltol = 1e-8
 saveat = 0:10000/100
 sol = ode.solve(f,u0,tspan,p=p,abstol=abstol,reltol=reltol,saveat=saveat)
 udf = as.data.frame(sol$u)
-plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
+plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
 ```
 
 ![precise_solution](https://user-images.githubusercontent.com/1814174/39012651-e03124e6-43c9-11e8-8496-bbee87987a37.png)
@@ -174,11 +173,33 @@ sol = ode.solve(f,u0,tspan,fname="f")
 
 This will help a lot if you are solving difficult equations (ex. large PDEs) or repeat solving (ex. parameter estimation).
 
-## Systems of SDEs
+## SDE Examples
 
-Solving stochastic differential equations (SDEs) is the similar. To solve a diagonal noise SDE, you use `sde.solve` and give
-two functions: `f` and `g`, where `du = f(u,t)dt + g(u,t)dW_t`. For example, let's add diagonal multiplicative noise to the
-Lorenz attractor:
+### 1D SDEs
+
+Solving stochastic differential equations (SDEs) is the similar to ODEs. To solve an SDE, you use `sde.solve` and give
+two functions: `f` and `g`, where `du = f(u,t)dt + g(u,t)dW_t`
+
+```r
+f <- function(u,p,t) {
+  return(1.01*u)
+}
+g <- function(u,p,t) {
+  return(0.87*u)
+}
+u0 = 1/2
+tspan <- list(0.0,1.0)
+sol = sde.solve(f,g,u0,tspan)
+plotly::plot_ly(udf, x = sol$t, y = sol$u, type = 'scatter', mode = 'lines')
+```
+
+![geometric_sdes](https://user-images.githubusercontent.com/1814174/39020683-9ea22b56-43e2-11e8-97f5-0c2a3ea69a2e.png)
+
+### Systems of Diagonal Noise SDEs
+
+Let's add diagonal multiplicative noise to the Lorenz attractor. diffeqr defaults to diagonal noise when a system of
+equations is given. This is a unique noise term per system variable. Thus we generalize our previous functions as
+follows:
 
 ```R
 f <- function(u,p,t) {
@@ -222,3 +243,16 @@ udf = as.data.frame(sol$u)
 ```
 
 ![stochastic_lorenz](https://user-images.githubusercontent.com/1814174/39019723-216c3210-43df-11e8-82c0-2e676f53e235.png)
+
+## Systems of SDEs with Non-Diagonal Noise
+
+function g(du,u,p,t)
+  du[1,1] = 0.3u[1]
+  du[1,2] = 0.6u[1]
+  du[1,3] = 0.9u[1]
+  du[1,4] = 0.12u[2]
+  du[2,1] = 1.2u[1]
+  du[2,2] = 0.2u[2]
+  du[2,3] = 0.3u[2]
+  du[2,4] = 1.8u[2]
+end

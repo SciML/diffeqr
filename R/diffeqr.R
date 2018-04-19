@@ -63,7 +63,7 @@ ode.solve <- function(f,u0,tspan,p=NULL,alg="nothing",fname="___f",reltol=1e-3,a
 #' @return sol. Has the sol$t for the time points and sol$u for the values.
 #'
 #' @export
-sde.solve <- function(f,g,u0,tspan,p=NULL,alg="nothing",fname="___f",gname="___g",reltol=1e-3,abstol=1e-6,saveat=NULL){
+sde.solve <- function(f,g,u0,tspan,p=NULL,alg="nothing",fname="___f",gname="___g",noise.dims=NULL,reltol=1e-3,abstol=1e-6,saveat=NULL){
   julia_assign("___f", f)
   julia_assign("___g", g)
   julia_assign("u0", u0)
@@ -82,7 +82,12 @@ sde.solve <- function(f,g,u0,tspan,p=NULL,alg="nothing",fname="___f",gname="___g
     saveat_str = "saveat"
     julia_assign("saveat", saveat)
   }
-  jleval = stringr::str_interp("prob = SDEProblem(${fname},${gname},u0,tspan,${p_str})")
+  if (is.null(noise.dims)) {
+    nrp_str = "nothing"
+  } else {
+    nrp_str = stringr::str_interp("zeros(${noise.dims[1]},${noise.dims[2]})")
+  }
+  jleval = stringr::str_interp("prob = SDEProblem(${fname},${gname},u0,tspan,${p_str},noise_rate_prototype=${nrp_str})")
   julia_eval(jleval)
   jleval = stringr::str_interp("sol = solve(prob,${alg},reltol=${reltol},abstol=${abstol}, saveat=${saveat_str}); nothing")
   julia_eval(jleval)
