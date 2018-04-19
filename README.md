@@ -30,7 +30,7 @@ The common interface arguments are documented
 [at the DifferentialEquations.jl page](http://docs.juliadiffeq.org/latest/basics/common_solver_opts.html).
 Notice that not all options are allowed, but the most common arguments are supported.
 
-## ODE Examples
+## Ordinary Differential Equation (ODE) Examples
 
 ### 1D Linear ODEs
 
@@ -173,7 +173,7 @@ sol = ode.solve(f,u0,tspan,fname="f")
 
 This will help a lot if you are solving difficult equations (ex. large PDEs) or repeat solving (ex. parameter estimation).
 
-## SDE Examples
+## Stochastic Differential Equation (SDE) Examples
 
 ### 1D SDEs
 
@@ -244,7 +244,7 @@ udf = as.data.frame(sol$u)
 
 ![stochastic_lorenz](https://user-images.githubusercontent.com/1814174/39019723-216c3210-43df-11e8-82c0-2e676f53e235.png)
 
-## Systems of SDEs with Non-Diagonal Noise
+### Systems of SDEs with Non-Diagonal Noise
 
 In many cases you may want to share noise terms across the system. This is known as non-diagonal noise. The 
 [DifferentialEquations.jl SDE Tutorial](http://docs.juliadiffeq.org/latest/tutorials/sde_example.html#Example-4:-Systems-of-SDEs-with-Non-Diagonal-Noise-1)
@@ -279,3 +279,47 @@ plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'line
 ![noise_corr](https://user-images.githubusercontent.com/1814174/39022036-8958319a-43e8-11e8-849b-c21bcb2ec21e.png)
 
 Here you can see that the warping effect of the noise correlations is quite visible!
+
+## Differential-Algebraic Equation (DAE) Examples
+
+A differential-algebraic equation is defined by an implicit function `f(du,u,p,t)=0`. All of the controls are the
+same as the other examples, except here you define a function which returns the residuals for each part of the equation
+to define the DAE. The initial value `u0` and the initial derivative `du0` are required, though they do not necessarily
+have to satisfy `f` (known as inconsistant initial conditions). The methods will automatically find consistant initial
+conditions. In order for this to occur, `differential_vars` must be set. This vector states which of the variables are
+differential (have a derivative term), with `false` meaning that the variable is purely algebraic.
+
+This example shows how to solve the Robertson equation:
+
+```R
+f <- function (du,u,p,t) {
+  resid1 = - 0.04*u[1]              + 1e4*u[2]*u[3] - du[1]
+  resid2 = + 0.04*u[1] - 3e7*u[2]^2 - 1e4*u[2]*u[3] - du[2]
+  resid3 = u[1] + u[2] + u[3] - 1.0
+  c(resid1,resid2,resid3)
+}
+u0 = c(1.0, 0, 0)
+du0 = c(-0.04, 0.04, 0.0)
+tspan = list(0.0,100000.0)
+differential_vars = c(TRUE,TRUE,FALSE)
+sol = dae.solve(f,du0,u0,tspan,differential_vars=differential_vars)
+udf = as.data.frame(sol$u)
+plotly::plot_ly(udf, x = sol$t, y = ~V1, type = 'scatter', mode = 'lines') %>%
+plotly::add_trace(y = ~V2) %>%
+plotly::add_trace(y = ~V3)
+```
+
+Additionally, an in-place JIT compiled form for `f` can be used to enhance the speed:
+
+```R
+f = julia_eval("
+function f(out,du,u,p,t)
+  out[1] = - 0.04u[1]              + 1e4*u[2]*u[3] - du[1]
+  out[2] = + 0.04u[1] - 3e7*u[2]^2 - 1e4*u[2]*u[3] - du[2]
+  out[3] = u[1] + u[2] + u[3] - 1.0
+end
+")
+sol = dae.solve(f,du0,u0,tspan,fname="f",differential_vars=differential_vars)
+```
+
+![daes](https://user-images.githubusercontent.com/1814174/39022955-d600814c-43ec-11e8-91bb-e096ff3d3fb7.png)
