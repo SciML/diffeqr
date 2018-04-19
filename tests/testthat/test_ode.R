@@ -22,7 +22,7 @@ test_that('saveat works',{
 
 sol3 = ode.solve(f,u0,tspan,alg="Vern9()")
 test_that('alg works',{
-  length(sol3$t) < 5
+  expect_true(length(sol3$t) < 5)
 })
 
 f <- function(u,p,t) {
