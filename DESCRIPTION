@@ -1,0 +1,20 @@
+Package: diffeqr
+Type: Package
+Title: Solving Differential Equations (ODEs, SDEs, DDEs, DAEs) in R
+Version: 0.0.0.9000
+Authors@R: person("Christopher", "Rackauckas", email = "contact@juliadiffeq.org", role = c("aut", "cre"))
+Description: diffeqr is an interface to DifferentialEquations.jl from the R programming language. 
+  It has unique high performance methods for solving ordinary differential equations (ODE), stochastic differential equations (SDE), 
+  delay differential equations (DDE), differential-algebraic equations (DAE), and more. Much of the functionality, 
+  including features like adaptive time stepping in SDEs, are unique and allow for multiple orders of magnitude speedup over more common methods. 
+  diffeqr attaches an R interface onto the package, allowing seamless use of this tooling by R users. 
+Depends: R (>= 3.4.4)
+Encoding: UTF-8
+License: MIT + file LICENSE
+LazyData: true
+SystemRequirements: Julia (>= 0.6.0), DifferentialEquations.jl
+Imports:
+  JuliaCall,
+  stringr
+RoxygenNote: 6.0.1
+Suggests: testthat
