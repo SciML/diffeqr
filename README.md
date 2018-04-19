@@ -137,3 +137,39 @@ plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
 ```
 
 ![precise_solution](https://user-images.githubusercontent.com/1814174/39012651-e03124e6-43c9-11e8-8496-bbee87987a37.png)
+
+We can also choose to use a different algorithm. The choice is done using a string that matches the Julia syntax. See
+[the ODE tutorial for details](http://docs.juliadiffeq.org/latest/tutorials/ode_example.html#Choosing-a-Solver-Algorithm-1).
+The list of choices for ODEs can be found at the [ODE Solvers page](http://docs.juliadiffeq.org/latest/solvers/ode_solve.html).
+For example, let's use a 9th order method due to Verner:
+
+```R
+sol = ode.solve(f,u0,tspan,alg="Vern9()",p=p,abstol=abstol,reltol=reltol,saveat=saveat)
+```
+
+Note that each algorithm choice will cause a JIT compilation.
+
+## Performance Enhancements
+
+One way to enhance the performance of your code is to define the function in Julia so that way it is JIT compiled. diffeqr is
+built using [the JuliaCall package](https://github.com/Non-Contradiction/JuliaCall), and so you can utilize this same interface
+to define a function directly in Julia:
+
+```R
+f <- julia_eval("
+function f(du,u,p,t)
+  du[1] = 10.0*(u[2]-u[1])
+  du[2] = u[1]*(28.0-u[3]) - u[2]
+  du[3] = u[1]*u[2] - (8/3)*u[3]
+end")
+```
+
+We can then use this in our ODE function by telling it to use the Julia-defined function called `f`:
+
+```R
+u0 = c(1.0,0.0,0.0)
+tspan <- list(0.0,100.0)
+sol = ode.solve(f,u0,tspan,fname="f")
+```
+
+This will help a lot if you are solving difficult equations (ex. large PDEs) or repeat solving (ex. parameter estimation).

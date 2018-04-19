@@ -20,7 +20,7 @@ julia_library("DifferentialEquations")
 #' @return sol. Has the sol$t for the time points and sol$u for the values.
 #'
 #' @export
-ode.solve <- function(f,u0,tspan,p=NULL,fname="___f",reltol=1e-3,abstol=1e-6,saveat=NULL){
+ode.solve <- function(f,u0,tspan,p=NULL,alg="nothing",fname="___f",reltol=1e-3,abstol=1e-6,saveat=NULL){
   julia_assign("___f", f)
   julia_assign("u0", u0)
   tspan_tup = tspan
@@ -40,7 +40,7 @@ ode.solve <- function(f,u0,tspan,p=NULL,fname="___f",reltol=1e-3,abstol=1e-6,sav
   }
   jleval = stringr::str_interp("prob = ODEProblem(${fname},u0,tspan,${p_str})")
   julia_eval(jleval)
-  jleval = stringr::str_interp("sol = solve(prob,reltol=${reltol},abstol=${abstol}, saveat=${saveat_str}); nothing")
+  jleval = stringr::str_interp("sol = solve(prob,${alg},reltol=${reltol},abstol=${abstol}, saveat=${saveat_str}); nothing")
   julia_eval(jleval)
   u = julia_eval("typeof(u0)<:Number ? Array(sol) : sol'")
   t = julia_eval("sol.t")

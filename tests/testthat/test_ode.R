@@ -20,6 +20,10 @@ test_that('saveat works',{
   expect_equal(sol$u[length(sol$u)],sol2$u[length(sol2$u)])
 })
 
+sol3 = ode.solve(f,u0,tspan,alg="Vern9()")
+test_that('alg works',{
+  length(sol3$t) < 5
+})
 
 f <- function(u,p,t) {
   du1 = p[1]*(u[2]-u[1])
@@ -37,11 +41,11 @@ udf = as.data.frame(sol$u)
 
 
 f <- julia_eval("
-                function f(du,u,p,t)
-                du[1] = 10.0*(u[2]-u[1])
-                du[2] = u[1]*(28.0-u[3]) - u[2]
-                du[3] = u[1]*u[2] - (8/3)*u[3]
-                end")
+function f(du,u,p,t)
+  du[1] = 10.0*(u[2]-u[1])
+  du[2] = u[1]*(28.0-u[3]) - u[2]
+  du[3] = u[1]*u[2] - (8/3)*u[3]
+end")
 u0 = c(1.0,0.0,0.0)
 tspan <- list(0.0,100.0)
 sol = ode.solve(f,u0,tspan,fname="f")
