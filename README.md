@@ -173,3 +173,52 @@ sol = ode.solve(f,u0,tspan,fname="f")
 ```
 
 This will help a lot if you are solving difficult equations (ex. large PDEs) or repeat solving (ex. parameter estimation).
+
+## Systems of SDEs
+
+Solving stochastic differential equations (SDEs) is the similar. To solve a diagonal noise SDE, you use `sde.solve` and give
+two functions: `f` and `g`, where `du = f(u,t)dt + g(u,t)dW_t`. For example, let's add diagonal multiplicative noise to the
+Lorenz attractor:
+
+```R
+f <- function(u,p,t) {
+  du1 = p[1]*(u[2]-u[1])
+  du2 = u[1]*(p[2]-u[3]) - u[2]
+  du3 = u[1]*u[2] - p[3]*u[3]
+  return(c(du1,du2,du3))
+}
+g <- function(u,p,t) {
+  return(c(0.3*u[1],0.3*u[2],0.3*u[3]))
+}
+u0 = c(1.0,0.0,0.0)
+tspan <- list(0.0,1.0)
+p = c(10.0,28.0,8/3)
+sol = sde.solve(f,g,u0,tspan,p=p,saveat=0.005)
+udf = as.data.frame(sol$u)
+plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
+```
+
+Using a JIT compiled function for the drift and diffusion functions can greatly enhance the speed here.
+With the speed increase we can comfortably solve over long time spans:
+
+```R
+f <- julia_eval("
+function f(du,u,p,t)
+  du[1] = 10.0*(u[2]-u[1])
+  du[2] = u[1]*(28.0-u[3]) - u[2]
+  du[3] = u[1]*u[2] - (8/3)*u[3]
+end")
+
+g <- julia_eval("
+function g(du,u,p,t)
+  du[1] = 0.3*u[1]
+  du[2] = 0.3*u[2]
+  du[3] = 0.3*u[3]
+end")
+tspan <- list(0.0,100.0)
+sol = sde.solve(f,g,u0,tspan,fname="f",gname="g",p=p,saveat=0.05)
+udf = as.data.frame(sol$u)
+#plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
+```
+
+![stochastic_lorenz](https://user-images.githubusercontent.com/1814174/39019723-216c3210-43df-11e8-82c0-2e676f53e235.png)
