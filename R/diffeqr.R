@@ -63,7 +63,7 @@ ode.solve <- function(f,u0,tspan,p=NULL,alg="nothing",fname="___f",reltol=1e-3,a
 #' @return sol. Has the sol$t for the time points and sol$u for the values.
 #'
 #' @export
-sde.solve <- function(f,g,u0,tspan,p=NULL,alg="nothing",fname="___f",gname="___g",noise.dims=NULL,reltol=1e-3,abstol=1e-6,saveat=NULL){
+sde.solve <- function(f,g,u0,tspan,p=NULL,alg="nothing",fname="___f",gname="___g",noise.dims=NULL,reltol=1e-2,abstol=1e-2,saveat=NULL){
   julia_assign("___f", f)
   julia_assign("___g", g)
   julia_assign("u0", u0)

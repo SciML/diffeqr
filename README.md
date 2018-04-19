@@ -216,7 +216,7 @@ tspan <- list(0.0,1.0)
 p = c(10.0,28.0,8/3)
 sol = sde.solve(f,g,u0,tspan,p=p,saveat=0.005)
 udf = as.data.frame(sol$u)
-plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
+plotly::plot_ly(x = sol$t, y = sol$u, type = 'scatter', mode = 'lines')
 ```
 
 Using a JIT compiled function for the drift and diffusion functions can greatly enhance the speed here.
@@ -246,13 +246,36 @@ udf = as.data.frame(sol$u)
 
 ## Systems of SDEs with Non-Diagonal Noise
 
+In many cases you may want to share noise terms across the system. This is known as non-diagonal noise. The 
+[DifferentialEquations.jl SDE Tutorial](http://docs.juliadiffeq.org/latest/tutorials/sde_example.html#Example-4:-Systems-of-SDEs-with-Non-Diagonal-Noise-1)
+explains how the matrix form of the diffusion term corresponds to the summation style of multiple Wiener processes. Essentially,
+the row corresponds to which system the term is applied to, and the column is which noise term. So `du[i,j]` is the amount of
+noise due to the `j`th Wiener process that's applied to `u[i]`. We solve the Lorenz system with correlated noise as follows:
+
+```R
+f <- julia_eval("
+function f(du,u,p,t)
+  du[1] = 10.0*(u[2]-u[1])
+  du[2] = u[1]*(28.0-u[3]) - u[2]
+  du[3] = u[1]*u[2] - (8/3)*u[3]
+end")
+g <- julia_eval("
 function g(du,u,p,t)
   du[1,1] = 0.3u[1]
-  du[1,2] = 0.6u[1]
-  du[1,3] = 0.9u[1]
-  du[1,4] = 0.12u[2]
-  du[2,1] = 1.2u[1]
+  du[2,1] = 0.6u[1]
+  du[3,1] = 0.2u[1]
+  du[1,2] = 1.2u[2]
   du[2,2] = 0.2u[2]
-  du[2,3] = 0.3u[2]
-  du[2,4] = 1.8u[2]
-end
+  du[3,2] = 0.3u[2]
+end")
+u0 = c(1.0,0.0,0.0)
+tspan <- list(0.0,100.0)
+noise.dims = list(3,2)
+sol = sde.solve(f,g,u0,tspan,fname="f",gname="g",saveat=0.005,noise.dims=noise.dims)
+udf = as.data.frame(sol$u)
+plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
+```
+
+![noise_corr](https://user-images.githubusercontent.com/1814174/39022036-8958319a-43e8-11e8-849b-c21bcb2ec21e.png)
+
+Here you can see that the warping effect of the noise correlations is quite visible!
