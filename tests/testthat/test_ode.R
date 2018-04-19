@@ -5,7 +5,7 @@ f <- function(u,p,t) {
 }
 u0 = 1/2
 tspan <- list(0.0,1.0)
-sol = ode.solve(f,u0,tspan)
+sol = diffeqr::ode.solve(f,u0,tspan)
 test_that('1D works',{
   expect_true(length(sol$t) < 10)
   expect_true(sol$u[length(sol$u)] - exp(1)/2 < 5e-2)
@@ -13,14 +13,14 @@ test_that('1D works',{
 
 
 saveat=1:10/10
-sol2 = ode.solve(f,u0,tspan,saveat=saveat)
+sol2 = diffeqr::ode.solve(f,u0,tspan,saveat=saveat)
 
 test_that('saveat works',{
   expect_true(length(sol2$t) == 11)
   expect_equal(sol$u[length(sol$u)],sol2$u[length(sol2$u)])
 })
 
-sol3 = ode.solve(f,u0,tspan,alg="Vern9()")
+sol3 = diffeqr::ode.solve(f,u0,tspan,alg="Vern9()")
 test_that('alg works',{
   expect_true(length(sol3$t) < 5)
 })
@@ -34,13 +34,13 @@ f <- function(u,p,t) {
 u0 = c(1.0,0.0,0.0)
 tspan <- list(0.0,100.0)
 p = c(10.0,28.0,8/3)
-sol = ode.solve(f,u0,tspan,p=p)
+sol = diffeqr::ode.solve(f,u0,tspan,p=p)
 udf = as.data.frame(sol$u)
 #matplot(sol$t,udf,"l",col=1:3)
 #plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
 
 
-f <- julia_eval("
+f <- JuliaCall::julia_eval("
 function f(du,u,p,t)
   du[1] = 10.0*(u[2]-u[1])
   du[2] = u[1]*(28.0-u[3]) - u[2]
@@ -48,7 +48,7 @@ function f(du,u,p,t)
 end")
 u0 = c(1.0,0.0,0.0)
 tspan <- list(0.0,100.0)
-sol = ode.solve(f,u0,tspan,fname="f")
+sol = diffeqr::ode.solve(f,u0,tspan,fname="f")
 udf = as.data.frame(sol$u)
 #matplot(sol$t,udf,"l",col=1:3)
 #plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')

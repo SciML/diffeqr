@@ -1,6 +1,6 @@
 context("DDEs")
 
-f = julia_eval("function f(du, u, h, p, t)
+f = JuliaCall::julia_eval("function f(du, u, h, p, t)
   du[1] = 1.1/(1 + sqrt(10)*(h(p, t-20)[1])^(5/4)) - 10*u[1]/(1 + 40*u[2])
   du[2] = 100*u[1]/(1 + 40*u[2]) - 2.43*u[2]
 end")
@@ -10,6 +10,6 @@ h <- function (p,t){
 }
 tspan = list(0.0, 100.0)
 constant_lags = c(20.0)
-sol = dde.solve(f,u0,h,tspan,fname="f",constant_lags=constant_lags)
+sol = diffeqr::dde.solve(f,u0,h,tspan,fname="f",constant_lags=constant_lags)
 udf = as.data.frame(sol$u)
 #plotly::plot_ly(udf, x = sol$t, y = ~V1, type = 'scatter', mode = 'lines') %>% plotly::add_trace(y = ~V2)

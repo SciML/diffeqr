@@ -22,7 +22,7 @@ diffeqr does not provide the full functionality of DifferentialEquations.jl. Ins
 direct solving routines with an R interface. The most basic function is:
 
 ```R
-ode.solve(f,u0,tspan,[p,abstol,reltol,saveat])
+diffeqr::ode.solve(f,u0,tspan,[p,abstol,reltol,saveat])
 ```
 
 which solves the ODE `u' = f(u,p,t)` where `u(0)=u0` over the timespan `tspan`. 
@@ -34,13 +34,7 @@ Notice that not all options are allowed, but the most common arguments are suppo
 
 ### 1D Linear ODEs
 
-Let's solve the linear ODE `u'=1.01u`. Start by loading the library:
-
-```R
-library(diffeqr)
-```
-
-Then define our derivative function `f(u,p,t)`. 
+Let's solve the linear ODE `u'=1.01u`. Define the derivative function `f(u,p,t)`. 
 
 ```R
 f <- function(u,p,t) {
@@ -55,10 +49,10 @@ u0 = 1/2
 tspan <- list(0.0,1.0)
 ```
 
-With those pieces we call `ode.solve` to solve the ODE:
+With those pieces we call `diffeqr::ode.solve` to solve the ODE:
 
 ```R
-sol = ode.solve(f,u0,tspan)
+sol = diffeqr::ode.solve(f,u0,tspan)
 ```
 
 This gives back a solution object for which `sol$t` are the time points
@@ -84,13 +78,13 @@ f <- function(u,p,t) {
 }
 ```
 
-Here we utilized the parameter array `p`. Thus we use `ode.solve` like before, but also pass in parameters this time:
+Here we utilized the parameter array `p`. Thus we use `diffeqr::ode.solve` like before, but also pass in parameters this time:
 
 ```R
 u0 = c(1.0,0.0,0.0)
 tspan <- list(0.0,100.0)
 p = c(10.0,28.0,8/3)
-sol = ode.solve(f,u0,tspan,p=p)
+sol = diffeqr::ode.solve(f,u0,tspan,p=p)
 ```
 
 The returned solution is like before. It is convenient to turn it into a data.frame:
@@ -130,7 +124,7 @@ Together, this looks like:
 abstol = 1e-8
 reltol = 1e-8
 saveat = 0:10000/100
-sol = ode.solve(f,u0,tspan,p=p,abstol=abstol,reltol=reltol,saveat=saveat)
+sol = diffeqr::ode.solve(f,u0,tspan,p=p,abstol=abstol,reltol=reltol,saveat=saveat)
 udf = as.data.frame(sol$u)
 plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
 ```
@@ -143,7 +137,7 @@ The list of choices for ODEs can be found at the [ODE Solvers page](http://docs.
 For example, let's use a 9th order method due to Verner:
 
 ```R
-sol = ode.solve(f,u0,tspan,alg="Vern9()",p=p,abstol=abstol,reltol=reltol,saveat=saveat)
+sol = diffeqr::ode.solve(f,u0,tspan,alg="Vern9()",p=p,abstol=abstol,reltol=reltol,saveat=saveat)
 ```
 
 Note that each algorithm choice will cause a JIT compilation.
@@ -155,7 +149,7 @@ built using [the JuliaCall package](https://github.com/Non-Contradiction/JuliaCa
 to define a function directly in Julia:
 
 ```R
-f <- julia_eval("
+f <- JuliaCall::julia_eval("
 function f(du,u,p,t)
   du[1] = 10.0*(u[2]-u[1])
   du[2] = u[1]*(28.0-u[3]) - u[2]
@@ -168,7 +162,7 @@ We can then use this in our ODE function by telling it to use the Julia-defined 
 ```R
 u0 = c(1.0,0.0,0.0)
 tspan <- list(0.0,100.0)
-sol = ode.solve(f,u0,tspan,fname="f")
+sol = diffeqr::ode.solve(f,u0,tspan,fname="f")
 ```
 
 This will help a lot if you are solving difficult equations (ex. large PDEs) or repeat solving (ex. parameter estimation).
@@ -177,7 +171,7 @@ This will help a lot if you are solving difficult equations (ex. large PDEs) or 
 
 ### 1D SDEs
 
-Solving stochastic differential equations (SDEs) is the similar to ODEs. To solve an SDE, you use `sde.solve` and give
+Solving stochastic differential equations (SDEs) is the similar to ODEs. To solve an SDE, you use `diffeqr::sde.solve` and give
 two functions: `f` and `g`, where `du = f(u,t)dt + g(u,t)dW_t`
 
 ```r
@@ -189,7 +183,7 @@ g <- function(u,p,t) {
 }
 u0 = 1/2
 tspan <- list(0.0,1.0)
-sol = sde.solve(f,g,u0,tspan)
+sol = diffeqr::sde.solve(f,g,u0,tspan)
 plotly::plot_ly(udf, x = sol$t, y = sol$u, type = 'scatter', mode = 'lines')
 ```
 
@@ -214,7 +208,7 @@ g <- function(u,p,t) {
 u0 = c(1.0,0.0,0.0)
 tspan <- list(0.0,1.0)
 p = c(10.0,28.0,8/3)
-sol = sde.solve(f,g,u0,tspan,p=p,saveat=0.005)
+sol = diffeqr::sde.solve(f,g,u0,tspan,p=p,saveat=0.005)
 udf = as.data.frame(sol$u)
 plotly::plot_ly(x = sol$t, y = sol$u, type = 'scatter', mode = 'lines')
 ```
@@ -223,21 +217,21 @@ Using a JIT compiled function for the drift and diffusion functions can greatly 
 With the speed increase we can comfortably solve over long time spans:
 
 ```R
-f <- julia_eval("
+f <- JuliaCall::julia_eval("
 function f(du,u,p,t)
   du[1] = 10.0*(u[2]-u[1])
   du[2] = u[1]*(28.0-u[3]) - u[2]
   du[3] = u[1]*u[2] - (8/3)*u[3]
 end")
 
-g <- julia_eval("
+g <- JuliaCall::julia_eval("
 function g(du,u,p,t)
   du[1] = 0.3*u[1]
   du[2] = 0.3*u[2]
   du[3] = 0.3*u[3]
 end")
 tspan <- list(0.0,100.0)
-sol = sde.solve(f,g,u0,tspan,fname="f",gname="g",p=p,saveat=0.05)
+sol = diffeqr::sde.solve(f,g,u0,tspan,fname="f",gname="g",p=p,saveat=0.05)
 udf = as.data.frame(sol$u)
 #plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
 ```
@@ -253,13 +247,13 @@ the row corresponds to which system the term is applied to, and the column is wh
 noise due to the `j`th Wiener process that's applied to `u[i]`. We solve the Lorenz system with correlated noise as follows:
 
 ```R
-f <- julia_eval("
+f <- JuliaCall::julia_eval("
 function f(du,u,p,t)
   du[1] = 10.0*(u[2]-u[1])
   du[2] = u[1]*(28.0-u[3]) - u[2]
   du[3] = u[1]*u[2] - (8/3)*u[3]
 end")
-g <- julia_eval("
+g <- JuliaCall::julia_eval("
 function g(du,u,p,t)
   du[1,1] = 0.3u[1]
   du[2,1] = 0.6u[1]
@@ -271,7 +265,7 @@ end")
 u0 = c(1.0,0.0,0.0)
 tspan <- list(0.0,100.0)
 noise.dims = list(3,2)
-sol = sde.solve(f,g,u0,tspan,fname="f",gname="g",saveat=0.005,noise.dims=noise.dims)
+sol = diffeqr::sde.solve(f,g,u0,tspan,fname="f",gname="g",saveat=0.005,noise.dims=noise.dims)
 udf = as.data.frame(sol$u)
 plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
 ```
@@ -302,7 +296,7 @@ u0 = c(1.0, 0, 0)
 du0 = c(-0.04, 0.04, 0.0)
 tspan = list(0.0,100000.0)
 differential_vars = c(TRUE,TRUE,FALSE)
-sol = dae.solve(f,du0,u0,tspan,differential_vars=differential_vars)
+sol = diffeqr::dae.solve(f,du0,u0,tspan,differential_vars=differential_vars)
 udf = as.data.frame(sol$u)
 plotly::plot_ly(udf, x = sol$t, y = ~V1, type = 'scatter', mode = 'lines') %>%
 plotly::add_trace(y = ~V2) %>%
@@ -312,14 +306,14 @@ plotly::add_trace(y = ~V3)
 Additionally, an in-place JIT compiled form for `f` can be used to enhance the speed:
 
 ```R
-f = julia_eval("
+f = JuliaCall::julia_eval("
 function f(out,du,u,p,t)
   out[1] = - 0.04u[1]              + 1e4*u[2]*u[3] - du[1]
   out[2] = + 0.04u[1] - 3e7*u[2]^2 - 1e4*u[2]*u[3] - du[2]
   out[3] = u[1] + u[2] + u[3] - 1.0
 end
 ")
-sol = dae.solve(f,du0,u0,tspan,fname="f",differential_vars=differential_vars)
+sol = diffeqr::dae.solve(f,du0,u0,tspan,fname="f",differential_vars=differential_vars)
 ```
 
 ![daes](https://user-images.githubusercontent.com/1814174/39022955-d600814c-43ec-11e8-91bb-e096ff3d3fb7.png)
@@ -337,7 +331,7 @@ was. This helps improve the solver accuracy by accurately stepping at the points
 this is:
 
 ```R
-f = julia_eval("function f(du, u, h, p, t)
+f = JuliaCall::julia_eval("function f(du, u, h, p, t)
   du[1] = 1.1/(1 + sqrt(10)*(h(p, t-20)[1])^(5/4)) - 10*u[1]/(1 + 40*u[2])
   du[2] = 100*u[1]/(1 + 40*u[2]) - 2.43*u[2]
 end")
@@ -347,7 +341,7 @@ h <- function (p,t){
 }
 tspan = list(0.0, 100.0)
 constant_lags = c(20.0)
-sol = dde.solve(f,u0,h,tspan,fname="f",constant_lags=constant_lags)
+sol = diffeqr::dde.solve(f,u0,h,tspan,fname="f",constant_lags=constant_lags)
 udf = as.data.frame(sol$u)
 plotly::plot_ly(udf, x = sol$t, y = ~V1, type = 'scatter', mode = 'lines') %>% plotly::add_trace(y = ~V2)
 ```

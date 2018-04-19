@@ -8,7 +8,7 @@ g <- function(u,p,t) {
 }
 u0 = 1/2
 tspan <- list(0.0,1.0)
-sol = sde.solve(f,g,u0,tspan)
+sol = diffeqr::sde.solve(f,g,u0,tspan)
 test_that('1D works',{
   expect_true(length(sol$t) > 10)
 })
@@ -27,29 +27,29 @@ g <- function(u,p,t) {
 u0 = c(1.0,0.0,0.0)
 tspan <- list(0.0,1.0)
 p = c(10.0,28.0,8/3)
-sol = sde.solve(f,g,u0,tspan,p=p,saveat=0.05)
+sol = diffeqr::sde.solve(f,g,u0,tspan,p=p,saveat=0.05)
 udf = as.data.frame(sol$u)
 #plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
 
-f <- julia_eval("
+f <- JuliaCall::julia_eval("
 function f(du,u,p,t)
   du[1] = 10.0*(u[2]-u[1])
   du[2] = u[1]*(28.0-u[3]) - u[2]
   du[3] = u[1]*u[2] - (8/3)*u[3]
 end")
 
-g <- julia_eval("
+g <- JuliaCall::julia_eval("
 function g(du,u,p,t)
   du[1] = 0.3u[1]
   du[2] = 0.3u[2]
   du[3] = 0.3u[3]
 end")
 tspan <- list(0.0,100.0)
-sol = sde.solve(f,g,u0,tspan,fname="f",gname="g",p=p,saveat=0.05)
+sol = diffeqr::sde.solve(f,g,u0,tspan,fname="f",gname="g",p=p,saveat=0.05)
 udf = as.data.frame(sol$u)
 #plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
 
-g <- julia_eval("
+g <- JuliaCall::julia_eval("
 function g(du,u,p,t)
   du[1,1] = 0.3u[1]
   du[2,1] = 0.6u[1]
@@ -59,6 +59,6 @@ function g(du,u,p,t)
   du[3,2] = 0.3u[2]
 end")
 noise.dims = list(3,2)
-sol = sde.solve(f,g,u0,tspan,fname="f",gname="g",saveat=0.005,noise.dims=noise.dims)
+sol = diffeqr::sde.solve(f,g,u0,tspan,fname="f",gname="g",saveat=0.005,noise.dims=noise.dims)
 udf = as.data.frame(sol$u)
 #plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
