@@ -117,3 +117,23 @@ plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
 ![plotly_plot](https://user-images.githubusercontent.com/1814174/39012384-27ee7262-43c9-11e8-84d2-1edf937288ae.png)
 
 Plotly is much prettier!
+
+### Option Handling
+
+If we want to have a more accurate solution, we can send `abstol` and `reltol`. Defaults are `1e-6` and `1e-3` respectively.
+Generally you can think of the digits of accuracy as related to 1 plus the exponent of the relative tolerance, so the default is
+two digits of accuracy. Absolute tolernace is the accuracy near 0. 
+
+In addition, we may want to choose to save at more time points. We do this by giving an array of values to save at as `saveat`.
+Together, this looks like:
+
+```R
+abstol = 1e-8
+reltol = 1e-8
+saveat = 0:10000/100
+sol = ode.solve(f,u0,tspan,p=p,abstol=abstol,reltol=reltol,saveat=saveat)
+udf = as.data.frame(sol$u)
+plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
+```
+
+![precise_solution](https://user-images.githubusercontent.com/1814174/39012651-e03124e6-43c9-11e8-8496-bbee87987a37.png)
