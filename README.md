@@ -323,3 +323,36 @@ sol = dae.solve(f,du0,u0,tspan,fname="f",differential_vars=differential_vars)
 ```
 
 ![daes](https://user-images.githubusercontent.com/1814174/39022955-d600814c-43ec-11e8-91bb-e096ff3d3fb7.png)
+
+## Delay Differential Equation (DDE) Examples
+
+A delay differential equation is an ODE which allows the use of previous values. In this case, the function
+needs to be a JIT compiled Julia function. It looks just like the ODE, except in this case there is a function
+`h(p,t)` which allows you to interpolate and grab previous values.
+
+We must provide a history function `h(p,t)` that gives values for `u` before
+`t0`. Here we assume that the solution was constant before the initial time point. Additionally, we pass
+`constant_lags = c(20.0)` to tell the solver that only constant-time lags were used and what the lag length
+was. This helps improve the solver accuracy by accurately stepping at the points of discontinuity. Together
+this is:
+
+```R
+f = julia_eval("function f(du, u, h, p, t)
+  du[1] = 1.1/(1 + sqrt(10)*(h(p, t-20)[1])^(5/4)) - 10*u[1]/(1 + 40*u[2])
+  du[2] = 100*u[1]/(1 + 40*u[2]) - 2.43*u[2]
+end")
+u0 = c(1.05767027/3, 1.030713491/3)
+h <- function (p,t){
+  c(1.05767027/3, 1.030713491/3)
+}
+tspan = list(0.0, 100.0)
+constant_lags = c(20.0)
+sol = dde.solve(f,u0,h,tspan,fname="f",constant_lags=constant_lags)
+udf = as.data.frame(sol$u)
+plotly::plot_ly(udf, x = sol$t, y = ~V1, type = 'scatter', mode = 'lines') %>% plotly::add_trace(y = ~V2)
+```
+
+![delay](https://user-images.githubusercontent.com/1814174/39023532-10bdd750-43f0-11e8-837d-156d33ea2f99.png)
+
+Notice that the solver accurately is able to simulate the kink (discontinuity) at `t=20` due to the discontinuity
+of the derivative at the initial time point! This is why declaring discontinuities can enhance the solver accuracy.
