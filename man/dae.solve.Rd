@@ -18,11 +18,17 @@ dae.solve(f, du0, u0, tspan, p = NULL, alg = "nothing", reltol = 0.001,
 
 \item{p}{the parameters. Defaults to no parameters. Can be a number or an array.}
 
+\item{alg}{the algorithm used to solve the differential equation. Defaults to an adaptive choice.
+Algorithm choices are done through a string which matches the DifferentialEquations.jl form.}
+
 \item{reltol}{the relative tolerance of the ODE solver. Defaults to 1e-3.}
 
 \item{abstol}{the absolute tolerance of the ODE solver. Defaults to 1e-6}
 
 \item{saveat}{the time points to save values at. Should be an array of times. Defaults to automatic.}
+
+\item{differential_vars}{boolean array declaring which variables are differential. All falses correspond to
+purely algebraic variables.}
 }
 \value{
 sol. Has the sol$t for the time points and sol$u for the values.

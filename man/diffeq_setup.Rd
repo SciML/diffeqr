@@ -6,6 +6,9 @@
 \usage{
 diffeq_setup(...)
 }
+\arguments{
+\item{Parameters}{are passed down to JuliaCall::julia_setup}
+}
 \description{
 This function initializes Julia and the DifferentialEquations.jl package.
 The first time will be long since it includes precompilation.
