@@ -1,6 +1,12 @@
-julia <- JuliaCall::julia_setup()
-JuliaCall::julia_install_package_if_needed("DifferentialEquations")
-JuliaCall::julia_library("DifferentialEquations")
+#' Setup diffeqr
+#'
+#' This function initializes Julia and the DifferentialEquations.jl package.
+#' The first time will be long since it includes precompilation.
+diffeq_setup <- function (...){
+  julia <- JuliaCall::julia_setup(...)
+  JuliaCall::julia_install_package_if_needed("DifferentialEquations")
+  JuliaCall::julia_library("DifferentialEquations")
+}
 
 #' Solve Ordinary Differential Equations (ODE)
 #'
@@ -178,7 +184,7 @@ dde.solve <- function(f,u0,h,tspan,p=NULL,alg="nothing",fname="___f",hname="___h
     saveat_str = "saveat"
     JuliaCall::julia_assign("saveat", saveat)
   }
-  if (is.null(differential_vars)){
+  if (is.null(constant_lags)){
     cl_str = "nothing"
   } else {
     cl_str = "cl"
