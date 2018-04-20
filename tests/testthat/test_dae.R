@@ -1,5 +1,7 @@
 context("DAEs")
 
+diffeqr::diffeq_setup()
+
 f <- function (du,u,p,t) {
   resid1 = - 0.04*u[1]              + 1e4*u[2]*u[3] - du[1]
   resid2 = + 0.04*u[1] - 3e7*u[2]^2 - 1e4*u[2]*u[3] - du[2]

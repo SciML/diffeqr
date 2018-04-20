@@ -34,7 +34,13 @@ Notice that not all options are allowed, but the most common arguments are suppo
 
 ### 1D Linear ODEs
 
-Let's solve the linear ODE `u'=1.01u`. Define the derivative function `f(u,p,t)`. 
+Let's solve the linear ODE `u'=1.01u`. First setup the package:
+
+```R
+diffeqr::diffeq_setup()
+```
+
+Define the derivative function `f(u,p,t)`. 
 
 ```R
 f <- function(u,p,t) {
