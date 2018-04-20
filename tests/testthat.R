@@ -1,4 +1,5 @@
+JuliaCall::julia_setup()
 library(testthat)
 library(diffeqr)
-
+diffeqr::diffeq_setup()
 test_check("diffeqr")

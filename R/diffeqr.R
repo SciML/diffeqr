@@ -1,6 +1,10 @@
-julia <- JuliaCall::julia_setup()
-JuliaCall::julia_install_package_if_needed("DifferentialEquations")
-JuliaCall::julia_library("DifferentialEquations")
+.diffeq <- new.env(parent = emptyenv())
+
+diffeq_setup <- function(...) {
+  .diffeq$julia <- JuliaCall::julia_setup(...)
+  .diffeq$julia$install_package_if_needed("DifferentialEquations")
+  .diffeq$julia$library("DifferentialEquations")
+}
 
 #' Solve Ordinary Differential Equations (ODE)
 #'
@@ -18,29 +22,29 @@ JuliaCall::julia_library("DifferentialEquations")
 #'
 #' @export
 ode.solve <- function(f,u0,tspan,p=NULL,alg="nothing",fname="___f",reltol=1e-3,abstol=1e-6,saveat=NULL){
-  JuliaCall::julia_assign("___f", f)
-  JuliaCall::julia_assign("u0", u0)
+  .diffeq$julia$assign("___f", f)
+  .diffeq$julia$assign("u0", u0)
   tspan_tup = tspan
   class(tspan_tup) <- "JuliaTuple"
-  JuliaCall::julia_assign("tspan", tspan_tup)
+  .diffeq$julia$assign("tspan", tspan_tup)
   if (is.null(p)){
     p_str = "nothing"
   } else {
     p_str = "p"
-    JuliaCall::julia_assign("p", p)
+    .diffeq$julia$assign("p", p)
   }
   if (is.null(saveat)){
     saveat_str = "eltype(prob.tspan)[]"
   } else {
     saveat_str = "saveat"
-    JuliaCall::julia_assign("saveat", saveat)
+    .diffeq$julia$assign("saveat", saveat)
   }
   jleval = stringr::str_interp("prob = ODEProblem(${fname},u0,tspan,${p_str})")
-  JuliaCall::julia_eval(jleval)
+  .diffeq$julia$eval(jleval)
   jleval = stringr::str_interp("sol = solve(prob,${alg},reltol=${reltol},abstol=${abstol}, saveat=${saveat_str}); nothing")
-  JuliaCall::julia_eval(jleval)
-  u = JuliaCall::julia_eval("typeof(u0)<:Number ? Array(sol) : sol'")
-  t = JuliaCall::julia_eval("sol.t")
+  .diffeq$julia$eval(jleval)
+  u = .diffeq$julia$eval("typeof(u0)<:Number ? Array(sol) : sol'")
+  t = .diffeq$julia$eval("sol.t")
   list(u=u,t=t)
 }
 
@@ -61,23 +65,23 @@ ode.solve <- function(f,u0,tspan,p=NULL,alg="nothing",fname="___f",reltol=1e-3,a
 #'
 #' @export
 sde.solve <- function(f,g,u0,tspan,p=NULL,alg="nothing",fname="___f",gname="___g",noise.dims=NULL,reltol=1e-2,abstol=1e-2,saveat=NULL){
-  JuliaCall::julia_assign("___f", f)
-  JuliaCall::julia_assign("___g", g)
-  JuliaCall::julia_assign("u0", u0)
+  .diffeq$julia$assign("___f", f)
+  .diffeq$julia$assign("___g", g)
+  .diffeq$julia$assign("u0", u0)
   tspan_tup = tspan
   class(tspan_tup) <- "JuliaTuple"
-  JuliaCall::julia_assign("tspan", tspan_tup)
+  .diffeq$julia$assign("tspan", tspan_tup)
   if (is.null(p)){
     p_str = "nothing"
   } else {
     p_str = "p"
-    JuliaCall::julia_assign("p", p)
+    .diffeq$julia$assign("p", p)
   }
   if (is.null(saveat)){
     saveat_str = "eltype(prob.tspan)[]"
   } else {
     saveat_str = "saveat"
-    JuliaCall::julia_assign("saveat", saveat)
+    .diffeq$julia$assign("saveat", saveat)
   }
   if (is.null(noise.dims)) {
     nrp_str = "nothing"
@@ -85,11 +89,11 @@ sde.solve <- function(f,g,u0,tspan,p=NULL,alg="nothing",fname="___f",gname="___g
     nrp_str = stringr::str_interp("zeros(${noise.dims[1]},${noise.dims[2]})")
   }
   jleval = stringr::str_interp("prob = SDEProblem(${fname},${gname},u0,tspan,${p_str},noise_rate_prototype=${nrp_str})")
-  JuliaCall::julia_eval(jleval)
+  .diffeq$julia$eval(jleval)
   jleval = stringr::str_interp("sol = solve(prob,${alg},reltol=${reltol},abstol=${abstol}, saveat=${saveat_str}); nothing")
-  JuliaCall::julia_eval(jleval)
-  u = JuliaCall::julia_eval("typeof(u0)<:Number ? Array(sol) : sol'")
-  t = JuliaCall::julia_eval("sol.t")
+  .diffeq$julia$eval(jleval)
+  u = .diffeq$julia$eval("typeof(u0)<:Number ? Array(sol) : sol'")
+  t = .diffeq$julia$eval("sol.t")
   list(u=u,t=t)
 }
 
@@ -110,36 +114,36 @@ sde.solve <- function(f,g,u0,tspan,p=NULL,alg="nothing",fname="___f",gname="___g
 #'
 #' @export
 dae.solve <- function(f,du0,u0,tspan,p=NULL,alg="nothing",fname="___f",reltol=1e-3,abstol=1e-6,saveat=NULL,differential_vars=NULL){
-  JuliaCall::julia_assign("___f", f)
-  JuliaCall::julia_assign("u0", u0)
-  JuliaCall::julia_assign("du0", du0)
+  .diffeq$julia$assign("___f", f)
+  .diffeq$julia$assign("u0", u0)
+  .diffeq$julia$assign("du0", du0)
   tspan_tup = tspan
   class(tspan_tup) <- "JuliaTuple"
-  JuliaCall::julia_assign("tspan", tspan_tup)
+  .diffeq$julia$assign("tspan", tspan_tup)
   if (is.null(p)){
     p_str = "nothing"
   } else {
     p_str = "p"
-    JuliaCall::julia_assign("p", p)
+    .diffeq$julia$assign("p", p)
   }
   if (is.null(saveat)){
     saveat_str = "eltype(prob.tspan)[]"
   } else {
     saveat_str = "saveat"
-    JuliaCall::julia_assign("saveat", saveat)
+    .diffeq$julia$assign("saveat", saveat)
   }
   if (is.null(differential_vars)){
     diffvar_str = "nothing"
   } else {
     diffvar_str = "diffvars"
-    JuliaCall::julia_assign("diffvars",differential_vars)
+    .diffeq$julia$assign("diffvars",differential_vars)
   }
   jleval = stringr::str_interp("prob = DAEProblem(${fname},du0,u0,tspan,${p_str},differential_vars=${diffvar_str})")
-  JuliaCall::julia_eval(jleval)
+  .diffeq$julia$eval(jleval)
   jleval = stringr::str_interp("sol = solve(prob,${alg},reltol=${reltol},abstol=${abstol}, saveat=${saveat_str}); nothing")
-  JuliaCall::julia_eval(jleval)
-  u = JuliaCall::julia_eval("typeof(u0)<:Number ? Array(sol) : sol'")
-  t = JuliaCall::julia_eval("sol.t")
+  .diffeq$julia$eval(jleval)
+  u = .diffeq$julia$eval("typeof(u0)<:Number ? Array(sol) : sol'")
+  t = .diffeq$julia$eval("sol.t")
   list(u=u,t=t)
 }
 
@@ -160,35 +164,35 @@ dae.solve <- function(f,du0,u0,tspan,p=NULL,alg="nothing",fname="___f",reltol=1e
 #'
 #' @export
 dde.solve <- function(f,u0,h,tspan,p=NULL,alg="nothing",fname="___f",hname="___h",reltol=1e-3,abstol=1e-6,saveat=NULL,constant_lags=NULL){
-  JuliaCall::julia_assign("___f", f)
-  JuliaCall::julia_assign("___h", h)
-  JuliaCall::julia_assign("u0", u0)
+  .diffeq$julia$assign("___f", f)
+  .diffeq$julia$assign("___h", h)
+  .diffeq$julia$assign("u0", u0)
   tspan_tup = tspan
   class(tspan_tup) <- "JuliaTuple"
-  JuliaCall::julia_assign("tspan", tspan_tup)
+  .diffeq$julia$assign("tspan", tspan_tup)
   if (is.null(p)){
     p_str = "nothing"
   } else {
     p_str = "p"
-    JuliaCall::julia_assign("p", p)
+    .diffeq$julia$assign("p", p)
   }
   if (is.null(saveat)){
     saveat_str = "eltype(prob.tspan)[]"
   } else {
     saveat_str = "saveat"
-    JuliaCall::julia_assign("saveat", saveat)
+    .diffeq$julia$assign("saveat", saveat)
   }
-  if (is.null(differential_vars)){
+  if (is.null(constant_lags)){
     cl_str = "nothing"
   } else {
     cl_str = "cl"
-    JuliaCall::julia_assign("cl",constant_lags)
+    .diffeq$julia$assign("cl",constant_lags)
   }
   jleval = stringr::str_interp("prob = DDEProblem(${fname},u0,${hname},tspan,${p_str},constant_lags=${cl_str})")
-  JuliaCall::julia_eval(jleval)
+  .diffeq$julia$eval(jleval)
   jleval = stringr::str_interp("sol = solve(prob,${alg},reltol=${reltol},abstol=${abstol}, saveat=${saveat_str}); nothing")
-  JuliaCall::julia_eval(jleval)
-  u = JuliaCall::julia_eval("typeof(u0)<:Number ? Array(sol) : sol'")
-  t = JuliaCall::julia_eval("sol.t")
+  .diffeq$julia$eval(jleval)
+  u = .diffeq$julia$eval("typeof(u0)<:Number ? Array(sol) : sol'")
+  t = .diffeq$julia$eval("sol.t")
   list(u=u,t=t)
 }
