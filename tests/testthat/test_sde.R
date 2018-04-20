@@ -45,7 +45,7 @@ function g(du,u,p,t)
   du[3] = 0.3u[3]
 end")
 tspan <- list(0.0,100.0)
-sol = diffeqr::sde.solve(f,g,u0,tspan,fname="f",gname="g",p=p,saveat=0.05)
+sol = diffeqr::sde.solve('f','g',u0,tspan,p=p,saveat=0.05)
 udf = as.data.frame(sol$u)
 #plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
 
@@ -59,6 +59,6 @@ function g(du,u,p,t)
   du[3,2] = 0.3u[2]
 end")
 noise.dims = list(3,2)
-sol = diffeqr::sde.solve(f,g,u0,tspan,fname="f",gname="g",saveat=0.005,noise.dims=noise.dims)
+sol = diffeqr::sde.solve('f','g',u0,tspan,saveat=0.005,noise.dims=noise.dims)
 udf = as.data.frame(sol$u)
 #plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')

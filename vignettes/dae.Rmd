@@ -53,5 +53,5 @@ function f(out,du,u,p,t)
   out[3] = u[1] + u[2] + u[3] - 1.0
 end
 ")
-sol = diffeqr::dae.solve(f,du0,u0,tspan,fname="f",differential_vars=differential_vars)
+sol = diffeqr::dae.solve('f',du0,u0,tspan,differential_vars=differential_vars)
 ```

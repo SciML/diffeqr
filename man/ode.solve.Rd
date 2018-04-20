@@ -4,8 +4,8 @@
 \alias{ode.solve}
 \title{Solve Ordinary Differential Equations (ODE)}
 \usage{
-ode.solve(f, u0, tspan, p = NULL, alg = "nothing", fname = "___f",
-  reltol = 0.001, abstol = 1e-06, saveat = NULL)
+ode.solve(f, u0, tspan, p = NULL, alg = "nothing", reltol = 0.001,
+  abstol = 1e-06, saveat = NULL)
 }
 \arguments{
 \item{f}{the derivative function.}
@@ -15,8 +15,6 @@ ode.solve(f, u0, tspan, p = NULL, alg = "nothing", fname = "___f",
 \item{tspan}{the timespan to solve over. Should be a list of two values: (initial time, end time).}
 
 \item{p}{the parameters. Defaults to no parameters. Can be a number or an array.}
-
-\item{fname}{the name of the Julia function. Defaults to automatic, using the passed in f.}
 
 \item{reltol}{the relative tolerance of the ODE solver. Defaults to 1e-3.}
 

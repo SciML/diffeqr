@@ -37,7 +37,7 @@ p = c(10.0,28.0,8/3)
 sol = diffeqr::ode.solve(f,u0,tspan,p=p)
 udf = as.data.frame(sol$u)
 #matplot(sol$t,udf,"l",col=1:3)
-#plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
+#plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
 
 
 f <- JuliaCall::julia_eval("
@@ -48,7 +48,7 @@ function f(du,u,p,t)
 end")
 u0 = c(1.0,0.0,0.0)
 tspan <- list(0.0,100.0)
-sol = diffeqr::ode.solve(f,u0,tspan,fname="f")
+sol = diffeqr::ode.solve('f',u0,tspan)
 udf = as.data.frame(sol$u)
 #matplot(sol$t,udf,"l",col=1:3)
-#plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
+#plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')

@@ -4,9 +4,8 @@
 \alias{dde.solve}
 \title{Solve Delay Differential Equations (DDE)}
 \usage{
-dde.solve(f, u0, h, tspan, p = NULL, alg = "nothing", fname = "___f",
-  hname = "___h", reltol = 0.001, abstol = 1e-06, saveat = NULL,
-  constant_lags = NULL)
+dde.solve(f, u0, h, tspan, p = NULL, alg = "nothing", reltol = 0.001,
+  abstol = 1e-06, saveat = NULL, constant_lags = NULL)
 }
 \arguments{
 \item{f}{the implicit ODE function.}
@@ -16,8 +15,6 @@ dde.solve(f, u0, h, tspan, p = NULL, alg = "nothing", fname = "___f",
 \item{tspan}{the timespan to solve over. Should be a list of two values: (initial time, end time).}
 
 \item{p}{the parameters. Defaults to no parameters. Can be a number or an array.}
-
-\item{fname}{the name of the Julia function. Defaults to automatic, using the passed in f.}
 
 \item{reltol}{the relative tolerance of the ODE solver. Defaults to 1e-3.}
 

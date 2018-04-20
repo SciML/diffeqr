@@ -4,9 +4,8 @@
 \alias{sde.solve}
 \title{Solve Stochastic Differential Equations (SDE)}
 \usage{
-sde.solve(f, g, u0, tspan, p = NULL, alg = "nothing", fname = "___f",
-  gname = "___g", noise.dims = NULL, reltol = 0.01, abstol = 0.01,
-  saveat = NULL)
+sde.solve(f, g, u0, tspan, p = NULL, alg = "nothing", noise.dims = NULL,
+  reltol = 0.01, abstol = 0.01, saveat = NULL)
 }
 \arguments{
 \item{f}{the drift function.}
@@ -18,8 +17,6 @@ sde.solve(f, g, u0, tspan, p = NULL, alg = "nothing", fname = "___f",
 \item{tspan}{the timespan to solve over. Should be a list of two values: (initial time, end time).}
 
 \item{p}{the parameters. Defaults to no parameters. Can be a number or an array.}
-
-\item{fname}{the name of the Julia function. Defaults to automatic, using the passed in f.}
 
 \item{reltol}{the relative tolerance of the ODE solver. Defaults to 1e-3.}
 

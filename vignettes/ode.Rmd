@@ -144,7 +144,7 @@ We can then use this in our ODE function by telling it to use the Julia-defined 
 ```R
 u0 = c(1.0,0.0,0.0)
 tspan <- list(0.0,100.0)
-sol = diffeqr::ode.solve(f,u0,tspan,fname="f")
+sol = diffeqr::ode.solve('f',u0,tspan)
 ```
 
 This will help a lot if you are solving difficult equations (ex. large PDEs) or repeat solving (ex. parameter estimation).

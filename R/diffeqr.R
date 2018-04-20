@@ -20,13 +20,17 @@ diffeq_setup <- function (...){
 #' @param reltol the relative tolerance of the ODE solver. Defaults to 1e-3.
 #' @param abstol the absolute tolerance of the ODE solver. Defaults to 1e-6
 #' @param saveat the time points to save values at. Should be an array of times. Defaults to automatic.
-#' @param fname the name of the Julia function. Defaults to automatic, using the passed in f.
 #'
 #' @return sol. Has the sol$t for the time points and sol$u for the values.
 #'
 #' @export
-ode.solve <- function(f,u0,tspan,p=NULL,alg="nothing",fname="___f",reltol=1e-3,abstol=1e-6,saveat=NULL){
-  JuliaCall::julia_assign("___f", f)
+ode.solve <- function(f,u0,tspan,p=NULL,alg="nothing",reltol=1e-3,abstol=1e-6,saveat=NULL){
+  if (is.character(f)){
+    fname = f
+  } else {
+    JuliaCall::julia_assign("___f", f)
+    fname = "___f"
+  }
   JuliaCall::julia_assign("u0", u0)
   tspan_tup = tspan
   class(tspan_tup) <- "JuliaTuple"
@@ -63,14 +67,23 @@ ode.solve <- function(f,u0,tspan,p=NULL,alg="nothing",fname="___f",reltol=1e-3,a
 #' @param reltol the relative tolerance of the ODE solver. Defaults to 1e-3.
 #' @param abstol the absolute tolerance of the ODE solver. Defaults to 1e-6
 #' @param saveat the time points to save values at. Should be an array of times. Defaults to automatic.
-#' @param fname the name of the Julia function. Defaults to automatic, using the passed in f.
 #'
 #' @return sol. Has the sol$t for the time points and sol$u for the values.
 #'
 #' @export
-sde.solve <- function(f,g,u0,tspan,p=NULL,alg="nothing",fname="___f",gname="___g",noise.dims=NULL,reltol=1e-2,abstol=1e-2,saveat=NULL){
-  JuliaCall::julia_assign("___f", f)
-  JuliaCall::julia_assign("___g", g)
+sde.solve <- function(f,g,u0,tspan,p=NULL,alg="nothing",noise.dims=NULL,reltol=1e-2,abstol=1e-2,saveat=NULL){
+  if (is.character(f)){
+    fname = f
+  } else {
+    JuliaCall::julia_assign("___f", f)
+    fname = "___f"
+  }
+  if (is.character(g)){
+    gname = g
+  } else {
+    JuliaCall::julia_assign("___g", g)
+    gname = "___g"
+  }
   JuliaCall::julia_assign("u0", u0)
   tspan_tup = tspan
   class(tspan_tup) <- "JuliaTuple"
@@ -112,13 +125,17 @@ sde.solve <- function(f,g,u0,tspan,p=NULL,alg="nothing",fname="___f",gname="___g
 #' @param reltol the relative tolerance of the ODE solver. Defaults to 1e-3.
 #' @param abstol the absolute tolerance of the ODE solver. Defaults to 1e-6
 #' @param saveat the time points to save values at. Should be an array of times. Defaults to automatic.
-#' @param fname the name of the Julia function. Defaults to automatic, using the passed in f.
 #'
 #' @return sol. Has the sol$t for the time points and sol$u for the values.
 #'
 #' @export
-dae.solve <- function(f,du0,u0,tspan,p=NULL,alg="nothing",fname="___f",reltol=1e-3,abstol=1e-6,saveat=NULL,differential_vars=NULL){
-  JuliaCall::julia_assign("___f", f)
+dae.solve <- function(f,du0,u0,tspan,p=NULL,alg="nothing",reltol=1e-3,abstol=1e-6,saveat=NULL,differential_vars=NULL){
+  if (is.character(f)){
+    fname = f
+  } else {
+    JuliaCall::julia_assign("___f", f)
+    fname = "___f"
+  }
   JuliaCall::julia_assign("u0", u0)
   JuliaCall::julia_assign("du0", du0)
   tspan_tup = tspan
@@ -162,14 +179,24 @@ dae.solve <- function(f,du0,u0,tspan,p=NULL,alg="nothing",fname="___f",reltol=1e
 #' @param reltol the relative tolerance of the ODE solver. Defaults to 1e-3.
 #' @param abstol the absolute tolerance of the ODE solver. Defaults to 1e-6
 #' @param saveat the time points to save values at. Should be an array of times. Defaults to automatic.
-#' @param fname the name of the Julia function. Defaults to automatic, using the passed in f.
 #'
 #' @return sol. Has the sol$t for the time points and sol$u for the values.
 #'
 #' @export
-dde.solve <- function(f,u0,h,tspan,p=NULL,alg="nothing",fname="___f",hname="___h",reltol=1e-3,abstol=1e-6,saveat=NULL,constant_lags=NULL){
-  JuliaCall::julia_assign("___f", f)
-  JuliaCall::julia_assign("___h", h)
+dde.solve <- function(f,u0,h,tspan,p=NULL,alg="nothing",reltol=1e-3,abstol=1e-6,saveat=NULL,constant_lags=NULL){
+  if (is.character(f)){
+    fname = f
+  } else {
+    JuliaCall::julia_assign("___f", f)
+    fname = "___f"
+  }
+  if (is.character(h)){
+    hname = h
+  } else {
+    JuliaCall::julia_assign("___h", h)
+    hname = "___h"
+  }
+
   JuliaCall::julia_assign("u0", u0)
   tspan_tup = tspan
   class(tspan_tup) <- "JuliaTuple"

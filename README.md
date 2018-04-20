@@ -168,7 +168,7 @@ We can then use this in our ODE function by telling it to use the Julia-defined 
 ```R
 u0 = c(1.0,0.0,0.0)
 tspan <- list(0.0,100.0)
-sol = diffeqr::ode.solve(f,u0,tspan,fname="f")
+sol = diffeqr::ode.solve('f',u0,tspan)
 ```
 
 This will help a lot if you are solving difficult equations (ex. large PDEs) or repeat solving (ex. parameter estimation).
@@ -237,7 +237,7 @@ function g(du,u,p,t)
   du[3] = 0.3*u[3]
 end")
 tspan <- list(0.0,100.0)
-sol = diffeqr::sde.solve(f,g,u0,tspan,fname="f",gname="g",p=p,saveat=0.05)
+sol = diffeqr::sde.solve('f','g',u0,tspan,p=p,saveat=0.05)
 udf = as.data.frame(sol$u)
 #plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
 ```
@@ -271,7 +271,7 @@ end")
 u0 = c(1.0,0.0,0.0)
 tspan <- list(0.0,100.0)
 noise.dims = list(3,2)
-sol = diffeqr::sde.solve(f,g,u0,tspan,fname="f",gname="g",saveat=0.005,noise.dims=noise.dims)
+sol = diffeqr::sde.solve('f','g',u0,tspan,saveat=0.005,noise.dims=noise.dims)
 udf = as.data.frame(sol$u)
 plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
 ```
@@ -319,7 +319,7 @@ function f(out,du,u,p,t)
   out[3] = u[1] + u[2] + u[3] - 1.0
 end
 ")
-sol = diffeqr::dae.solve(f,du0,u0,tspan,fname="f",differential_vars=differential_vars)
+sol = diffeqr::dae.solve('f',du0,u0,tspan,differential_vars=differential_vars)
 ```
 
 ![daes](https://user-images.githubusercontent.com/1814174/39022955-d600814c-43ec-11e8-91bb-e096ff3d3fb7.png)
@@ -347,7 +347,7 @@ h <- function (p,t){
 }
 tspan = list(0.0, 100.0)
 constant_lags = c(20.0)
-sol = diffeqr::dde.solve(f,u0,h,tspan,fname="f",constant_lags=constant_lags)
+sol = diffeqr::dde.solve('f',u0,h,tspan,constant_lags=constant_lags)
 udf = as.data.frame(sol$u)
 plotly::plot_ly(udf, x = sol$t, y = ~V1, type = 'scatter', mode = 'lines') %>% plotly::add_trace(y = ~V2)
 ```
