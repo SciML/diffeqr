@@ -2,6 +2,8 @@
 #'
 #' This function initializes Julia and the DifferentialEquations.jl package.
 #' The first time will be long since it includes precompilation.
+#'
+#' @export
 diffeq_setup <- function (...){
   julia <- JuliaCall::julia_setup(...)
   JuliaCall::julia_install_package_if_needed("DifferentialEquations")
