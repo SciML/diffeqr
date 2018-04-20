@@ -1,5 +1,5 @@
 ---
-title: "Solving stochastic differential equations (SDE) in R"
+title: "Solving Stochastic Differential Equations (SDE) in R with diffeqr"
 author: "Chris Rackauckas"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
@@ -16,9 +16,29 @@ knitr::opts_chunk$set(
 )
 ```
 
-Solving stochastic differential equations (SDEs) is the similar. To solve a diagonal noise SDE, you use `sde.solve` and give
-two functions: `f` and `g`, where `du = f(u,t)dt + g(u,t)dW_t`. For example, let's add diagonal multiplicative noise to the
-Lorenz attractor:
+### 1D SDEs
+
+Solving stochastic differential equations (SDEs) is the similar to ODEs. To solve an SDE, you use `diffeqr::sde.solve` and give
+two functions: `f` and `g`, where `du = f(u,t)dt + g(u,t)dW_t`
+
+```r
+f <- function(u,p,t) {
+  return(1.01*u)
+}
+g <- function(u,p,t) {
+  return(0.87*u)
+}
+u0 = 1/2
+tspan <- list(0.0,1.0)
+sol = diffeqr::sde.solve(f,g,u0,tspan)
+plotly::plot_ly(udf, x = sol$t, y = sol$u, type = 'scatter', mode = 'lines')
+```
+
+### Systems of Diagonal Noise SDEs
+
+Let's add diagonal multiplicative noise to the Lorenz attractor. diffeqr defaults to diagonal noise when a system of
+equations is given. This is a unique noise term per system variable. Thus we generalize our previous functions as
+follows:
 
 ```R
 f <- function(u,p,t) {
@@ -33,30 +53,62 @@ g <- function(u,p,t) {
 u0 = c(1.0,0.0,0.0)
 tspan <- list(0.0,1.0)
 p = c(10.0,28.0,8/3)
-sol = sde.solve(f,g,u0,tspan,p=p,saveat=0.005)
+sol = diffeqr::sde.solve(f,g,u0,tspan,p=p,saveat=0.005)
 udf = as.data.frame(sol$u)
-plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
+plotly::plot_ly(x = sol$t, y = sol$u, type = 'scatter', mode = 'lines')
 ```
 
 Using a JIT compiled function for the drift and diffusion functions can greatly enhance the speed here.
 With the speed increase we can comfortably solve over long time spans:
 
 ```R
-f <- julia_eval("
+f <- JuliaCall::julia_eval("
 function f(du,u,p,t)
   du[1] = 10.0*(u[2]-u[1])
   du[2] = u[1]*(28.0-u[3]) - u[2]
   du[3] = u[1]*u[2] - (8/3)*u[3]
 end")
 
-g <- julia_eval("
+g <- JuliaCall::julia_eval("
 function g(du,u,p,t)
   du[1] = 0.3*u[1]
   du[2] = 0.3*u[2]
   du[3] = 0.3*u[3]
 end")
 tspan <- list(0.0,100.0)
-sol = sde.solve(f,g,u0,tspan,fname="f",gname="g",p=p,saveat=0.05)
+sol = diffeqr::sde.solve(f,g,u0,tspan,fname="f",gname="g",p=p,saveat=0.05)
+udf = as.data.frame(sol$u)
+#plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
+```
+
+### Systems of SDEs with Non-Diagonal Noise
+
+In many cases you may want to share noise terms across the system. This is known as non-diagonal noise. The 
+[DifferentialEquations.jl SDE Tutorial](http://docs.juliadiffeq.org/latest/tutorials/sde_example.html#Example-4:-Systems-of-SDEs-with-Non-Diagonal-Noise-1)
+explains how the matrix form of the diffusion term corresponds to the summation style of multiple Wiener processes. Essentially,
+the row corresponds to which system the term is applied to, and the column is which noise term. So `du[i,j]` is the amount of
+noise due to the `j`th Wiener process that's applied to `u[i]`. We solve the Lorenz system with correlated noise as follows:
+
+```R
+f <- JuliaCall::julia_eval("
+function f(du,u,p,t)
+  du[1] = 10.0*(u[2]-u[1])
+  du[2] = u[1]*(28.0-u[3]) - u[2]
+  du[3] = u[1]*u[2] - (8/3)*u[3]
+end")
+g <- JuliaCall::julia_eval("
+function g(du,u,p,t)
+  du[1,1] = 0.3u[1]
+  du[2,1] = 0.6u[1]
+  du[3,1] = 0.2u[1]
+  du[1,2] = 1.2u[2]
+  du[2,2] = 0.2u[2]
+  du[3,2] = 0.3u[2]
+end")
+u0 = c(1.0,0.0,0.0)
+tspan <- list(0.0,100.0)
+noise.dims = list(3,2)
+sol = diffeqr::sde.solve(f,g,u0,tspan,fname="f",gname="g",saveat=0.005,noise.dims=noise.dims)
 udf = as.data.frame(sol$u)
 plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
 ```

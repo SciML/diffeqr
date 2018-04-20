@@ -1,5 +1,5 @@
 ---
-title: "Solving Ordinary Differential Equations with diffeqr"
+title: "Solving Ordinary Differential Equations (ODE) in R with diffeqr"
 author: "Chris Rackauckas"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
@@ -16,17 +16,17 @@ knitr::opts_chunk$set(
 )
 ```
 
-## 1D Linear ODEs
+### 1D Linear ODEs
 
-Let's solve the linear ODE `u'=1.01u`. Start by loading the library:
+Let's solve the linear ODE `u'=1.01u`. First setup the package:
 
-```{r}
-library(diffeqr)
+```R
+diffeqr::diffeq_setup()
 ```
 
-Then define our derivative function `f(u,p,t)`. 
+Define the derivative function `f(u,p,t)`. 
 
-```{r}
+```R
 f <- function(u,p,t) {
   return(1.01*u)
 }
@@ -34,21 +34,21 @@ f <- function(u,p,t) {
 
 Then we give it an initial condition and a time span to solve over:
 
-```{r}
+```R
 u0 = 1/2
 tspan <- list(0.0,1.0)
 ```
 
-With those pieces we call `ode.solve` to solve the ODE:
+With those pieces we call `diffeqr::ode.solve` to solve the ODE:
 
-```{r}
-sol = ode.solve(f,u0,tspan)
+```R
+sol = diffeqr::ode.solve(f,u0,tspan)
 ```
 
 This gives back a solution object for which `sol$t` are the time points
 and `sol$u` are the values. We can check it by plotting the solution:
 
-```{r,} 
+```R 
 plot(sol$t,sol$u,"l")
 ```
 
@@ -57,7 +57,7 @@ plot(sol$t,sol$u,"l")
 Now let's solve the Lorenz equations. In this case, our initial condition is a vector and our derivative functions
 takes in the vector to return a vector (note: arbitrary dimensional arrays are allowed). We would define this as:
 
-```{r}
+```R
 f <- function(u,p,t) {
   du1 = p[1]*(u[2]-u[1])
   du2 = u[1]*(p[2]-u[3]) - u[2]
@@ -66,32 +66,31 @@ f <- function(u,p,t) {
 }
 ```
 
-Here we utilized the parameter array `p`. Thus we use `ode.solve` like before, but also pass in parameters this time:
+Here we utilized the parameter array `p`. Thus we use `diffeqr::ode.solve` like before, but also pass in parameters this time:
 
-```{r}
+```R
 u0 = c(1.0,0.0,0.0)
 tspan <- list(0.0,100.0)
 p = c(10.0,28.0,8/3)
-sol = ode.solve(f,u0,tspan,p=p)
+sol = diffeqr::ode.solve(f,u0,tspan,p=p)
 ```
 
 The returned solution is like before. It is convenient to turn it into a data.frame:
 
-```{r}
+```R
 udf = as.data.frame(sol$u)
 ```
 
 Now we can use `matplot` to plot the timeseries together:
 
-```{r}
+```R
 matplot(sol$t,udf,"l",col=1:3)
 ```
 
 Now we can use the Plotly package to draw a phase plot:
 
-```{r}
-library(plotly)
-plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
+```R
+plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
 ```
 
 Plotly is much prettier!
@@ -105,11 +104,47 @@ two digits of accuracy. Absolute tolernace is the accuracy near 0.
 In addition, we may want to choose to save at more time points. We do this by giving an array of values to save at as `saveat`.
 Together, this looks like:
 
-```{r}
+```R
 abstol = 1e-8
 reltol = 1e-8
 saveat = 0:10000/100
-sol = ode.solve(f,u0,tspan,p=p,abstol=abstol,reltol=reltol,saveat=saveat)
+sol = diffeqr::ode.solve(f,u0,tspan,p=p,abstol=abstol,reltol=reltol,saveat=saveat)
 udf = as.data.frame(sol$u)
-plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
+plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
 ```
+
+We can also choose to use a different algorithm. The choice is done using a string that matches the Julia syntax. See
+[the ODE tutorial for details](http://docs.juliadiffeq.org/latest/tutorials/ode_example.html#Choosing-a-Solver-Algorithm-1).
+The list of choices for ODEs can be found at the [ODE Solvers page](http://docs.juliadiffeq.org/latest/solvers/ode_solve.html).
+For example, let's use a 9th order method due to Verner:
+
+```R
+sol = diffeqr::ode.solve(f,u0,tspan,alg="Vern9()",p=p,abstol=abstol,reltol=reltol,saveat=saveat)
+```
+
+Note that each algorithm choice will cause a JIT compilation.
+
+## Performance Enhancements
+
+One way to enhance the performance of your code is to define the function in Julia so that way it is JIT compiled. diffeqr is
+built using [the JuliaCall package](https://github.com/Non-Contradiction/JuliaCall), and so you can utilize this same interface
+to define a function directly in Julia:
+
+```R
+f <- JuliaCall::julia_eval("
+function f(du,u,p,t)
+  du[1] = 10.0*(u[2]-u[1])
+  du[2] = u[1]*(28.0-u[3]) - u[2]
+  du[3] = u[1]*u[2] - (8/3)*u[3]
+end")
+```
+
+We can then use this in our ODE function by telling it to use the Julia-defined function called `f`:
+
+```R
+u0 = c(1.0,0.0,0.0)
+tspan <- list(0.0,100.0)
+sol = diffeqr::ode.solve(f,u0,tspan,fname="f")
+```
+
+This will help a lot if you are solving difficult equations (ex. large PDEs) or repeat solving (ex. parameter estimation).

@@ -1,0 +1,57 @@
+---
+title: "Solving Differential-Algebraic Equations (DAE) in R with diffeqr"
+author: "Vignette Author"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+A differential-algebraic equation is defined by an implicit function `f(du,u,p,t)=0`. All of the controls are the
+same as the other examples, except here you define a function which returns the residuals for each part of the equation
+to define the DAE. The initial value `u0` and the initial derivative `du0` are required, though they do not necessarily
+have to satisfy `f` (known as inconsistant initial conditions). The methods will automatically find consistant initial
+conditions. In order for this to occur, `differential_vars` must be set. This vector states which of the variables are
+differential (have a derivative term), with `false` meaning that the variable is purely algebraic.
+
+This example shows how to solve the Robertson equation:
+
+```R
+f <- function (du,u,p,t) {
+  resid1 = - 0.04*u[1]              + 1e4*u[2]*u[3] - du[1]
+  resid2 = + 0.04*u[1] - 3e7*u[2]^2 - 1e4*u[2]*u[3] - du[2]
+  resid3 = u[1] + u[2] + u[3] - 1.0
+  c(resid1,resid2,resid3)
+}
+u0 = c(1.0, 0, 0)
+du0 = c(-0.04, 0.04, 0.0)
+tspan = list(0.0,100000.0)
+differential_vars = c(TRUE,TRUE,FALSE)
+sol = diffeqr::dae.solve(f,du0,u0,tspan,differential_vars=differential_vars)
+udf = as.data.frame(sol$u)
+plotly::plot_ly(udf, x = sol$t, y = ~V1, type = 'scatter', mode = 'lines') %>%
+plotly::add_trace(y = ~V2) %>%
+plotly::add_trace(y = ~V3)
+```
+
+Additionally, an in-place JIT compiled form for `f` can be used to enhance the speed:
+
+```R
+f = JuliaCall::julia_eval("
+function f(out,du,u,p,t)
+  out[1] = - 0.04u[1]              + 1e4*u[2]*u[3] - du[1]
+  out[2] = + 0.04u[1] - 3e7*u[2]^2 - 1e4*u[2]*u[3] - du[2]
+  out[3] = u[1] + u[2] + u[3] - 1.0
+end
+")
+sol = diffeqr::dae.solve(f,du0,u0,tspan,fname="f",differential_vars=differential_vars)
+```
