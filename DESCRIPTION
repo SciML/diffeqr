@@ -8,7 +8,7 @@ Description: diffeqr is an interface to DifferentialEquations.jl from the R prog
   delay differential equations (DDE), differential-algebraic equations (DAE), and more. Much of the functionality, 
   including features like adaptive time stepping in SDEs, are unique and allow for multiple orders of magnitude speedup over more common methods. 
   diffeqr attaches an R interface onto the package, allowing seamless use of this tooling by R users. 
-Depends: R (>= 3.4.4)
+Depends: R (>= 3.4.0)
 Encoding: UTF-8
 License: MIT + file LICENSE
 LazyData: true
