@@ -17,6 +17,10 @@ diffeqr is currently not registered into CRAN. Thus to use this package, use the
 devtools::install_github('JuliaDiffEq/diffeqr', build_vignettes=T)
 ```
 
+You will need a working installation of Julia in your path. To install Julia, download a generic binary
+from [the JuliaLang site](https://julialang.org/downloads/) and add it to your path. The download and
+installation of DifferentialEquations.jl will happen on the first invocation of `diffeqr::diffeq_setup()`.
+
 ## Usage
 
 diffeqr does not provide the full functionality of DifferentialEquations.jl. Instead, it supplies simplified
