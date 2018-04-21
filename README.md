@@ -1,6 +1,7 @@
 # diffeqr
 
 [![Build Status](https://travis-ci.org/JuliaDiffEq/diffeqr.svg?branch=master)](https://travis-ci.org/JuliaDiffEq/diffeqr)
+[![Build status](https://ci.appveyor.com/api/projects/status/2pxp5kfu0uiddmpl?svg=true)](https://ci.appveyor.com/project/ChrisRackauckas/diffeqr)
 
 diffeqr is a package for solving differential equations in R. It utilizes 
 [DifferentialEquations.jl](http://docs.juliadiffeq.org/latest/) for its core routines 
