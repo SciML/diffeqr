@@ -12,6 +12,8 @@ dde.solve(f, u0, h, tspan, p = NULL, alg = "nothing", reltol = 0.001,
 
 \item{u0}{the initial condition. Can be a number or (arbitrary dimension) array.}
 
+\item{h}{is the history function (p,t) which gives values of the solution before the initial time point.}
+
 \item{tspan}{the timespan to solve over. Should be a list of two values: (initial time, end time).}
 
 \item{p}{the parameters. Defaults to no parameters. Can be a number or an array.}

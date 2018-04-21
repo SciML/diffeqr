@@ -3,7 +3,7 @@
 #' This function initializes Julia and the DifferentialEquations.jl package.
 #' The first time will be long since it includes precompilation.
 #'
-#' @param Parameters are passed down to JuliaCall::julia_setup
+#' @param ... Parameters are passed down to JuliaCall::julia_setup
 #'
 #' @export
 diffeq_setup <- function (...){
@@ -184,6 +184,7 @@ dae.solve <- function(f,du0,u0,tspan,p=NULL,alg="nothing",reltol=1e-3,abstol=1e-
 #' Solves a DDE with f(u,p,t)=0 for u(0)=u0 over the tspan
 #' @param f the implicit ODE function.
 #' @param u0 the initial condition. Can be a number or (arbitrary dimension) array.
+#' @param h is the history function (p,t) which gives values of the solution before the initial time point.
 #' @param tspan the timespan to solve over. Should be a list of two values: (initial time, end time).
 #' @param p the parameters. Defaults to no parameters. Can be a number or an array.
 #' @param alg the algorithm used to solve the differential equation. Defaults to an adaptive choice.
