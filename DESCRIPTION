@@ -2,7 +2,7 @@ Package: diffeqr
 Type: Package
 Title: Solving Differential Equations (ODEs, SDEs, DDEs, DAEs) in R
 Version: 0.1.0
-Authors@R: person("Christopher", "Rackauckas", email = "contact@juliadiffeq.org", role = c("aut", "cre"))
+Authors@R: person("Christopher", "Rackauckas", email = "me@chrisrackauckas.com", role = c("aut", "cre"))
 Description: diffeqr is an interface to DifferentialEquations.jl from the R programming language. 
   It has unique high performance methods for solving ordinary differential equations (ODE), stochastic differential equations (SDE), 
   delay differential equations (DDE), differential-algebraic equations (DAE), and more. Much of the functionality, 
