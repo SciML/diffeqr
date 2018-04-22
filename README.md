@@ -1,5 +1,6 @@
 # diffeqr
 
+[![Join the chat at https://gitter.im/JuliaDiffEq/Lobby](https://badges.gitter.im/JuliaDiffEq/Lobby.svg)](https://gitter.im/JuliaDiffEq/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Build Status](https://travis-ci.org/JuliaDiffEq/diffeqr.svg?branch=master)](https://travis-ci.org/JuliaDiffEq/diffeqr)
 [![Build status](https://ci.appveyor.com/api/projects/status/2pxp5kfu0uiddmpl?svg=true)](https://ci.appveyor.com/project/ChrisRackauckas/diffeqr)
 
@@ -8,6 +9,9 @@ diffeqr is a package for solving differential equations in R. It utilizes
 to give high performance solving of ordinary differential equations (ODEs),
 stochastic differential equations (SDEs), delay differential equations (DDEs), and
 differential-algebraic equations (DAEs) directly in R.
+
+If you have any questions, or just want to chat about solvers/using the package,
+please feel free to chat in the [Gitter channel](https://gitter.im/JuliaDiffEq/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge). For bug reports, feature requests, etc., please submit an issue. 
 
 ## Installation
 
