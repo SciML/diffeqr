@@ -65,7 +65,7 @@ diffeq_setup <- function (...){
 #' sol = diffeqr::ode.solve(f,u0,tspan,p=p)
 #' udf = as.data.frame(sol$u)
 #' matplot(sol$t,udf,"l",col=1:3)
-#' plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
+#' #plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
 #'
 #' f <- JuliaCall::julia_eval("
 #' function f(du,u,p,t)
@@ -140,7 +140,7 @@ ode.solve <- function(f,u0,tspan,p=NULL,alg="nothing",reltol=1e-3,abstol=1e-6,sa
 #' u0 = 1/2
 #' tspan <- list(0.0,1.0)
 #' sol = diffeqr::sde.solve(f,g,u0,tspan)
-#' plotly::plot_ly(udf, x = sol$t, y = sol$u, type = 'scatter', mode = 'lines')
+#' #plotly::plot_ly(udf, x = sol$t, y = sol$u, type = 'scatter', mode = 'lines')
 #'
 #' # Diagonal Noise SDEs
 #'
@@ -160,7 +160,7 @@ ode.solve <- function(f,u0,tspan,p=NULL,alg="nothing",reltol=1e-3,abstol=1e-6,sa
 #' tspan <- list(0.0,100.0)
 #' sol = diffeqr::sde.solve('f','g',u0,tspan,p=p,saveat=0.05)
 #' udf = as.data.frame(sol$u)
-#' plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
+#' #plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
 #'
 #' # Non-Diagonal Noise SDEs
 #'
@@ -184,7 +184,7 @@ ode.solve <- function(f,u0,tspan,p=NULL,alg="nothing",reltol=1e-3,abstol=1e-6,sa
 #' noise.dims = list(3,2)
 #' sol = diffeqr::sde.solve('f','g',u0,tspan,saveat=0.005,noise.dims=noise.dims)
 #' udf = as.data.frame(sol$u)
-#' plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
+#' #plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
 #'
 #' @export
 sde.solve <- function(f,g,u0,tspan,p=NULL,alg="nothing",noise.dims=NULL,reltol=1e-2,abstol=1e-2,saveat=NULL){
@@ -264,9 +264,9 @@ sde.solve <- function(f,g,u0,tspan,p=NULL,alg="nothing",noise.dims=NULL,reltol=1
 #' differential_vars = c(TRUE,TRUE,FALSE)
 #' sol = diffeqr::dae.solve(f,du0,u0,tspan,differential_vars=differential_vars)
 #' udf = as.data.frame(sol$u)
-#' plotly::plot_ly(udf, x = sol$t, y = ~V1, type = 'scatter', mode = 'lines') %>%
-#' plotly::add_trace(y = ~V2) %>%
-#' plotly::add_trace(y = ~V3)
+#' #plotly::plot_ly(udf, x = sol$t, y = ~V1, type = 'scatter', mode = 'lines') %>%
+#' #plotly::add_trace(y = ~V2) %>%
+#' #plotly::add_trace(y = ~V3)
 #'
 #' f = JuliaCall::julia_eval("function f(out,du,u,p,t)
 #'   out[1] = - 0.04u[1]              + 1e4*u[2]*u[3] - du[1]
@@ -348,7 +348,8 @@ dae.solve <- function(f,du0,u0,tspan,p=NULL,alg="nothing",reltol=1e-3,abstol=1e-
 #' constant_lags = c(20.0)
 #' sol = diffeqr::dde.solve('f',u0,h,tspan,constant_lags=constant_lags)
 #' udf = as.data.frame(sol$u)
-#' plotly::plot_ly(udf, x = sol$t, y = ~V1, type = 'scatter', mode = 'lines') %>% plotly::add_trace(y = ~V2)
+#' #plotly::plot_ly(udf, x = sol$t, y = ~V1, type = 'scatter', mode = 'lines') %>%
+#' #plotly::add_trace(y = ~V2)
 #'
 #' @export
 dde.solve <- function(f,u0,h,tspan,p=NULL,alg="nothing",reltol=1e-3,abstol=1e-6,saveat=NULL,constant_lags=NULL){

@@ -51,6 +51,7 @@ tspan = list(0.0, 100.0)
 constant_lags = c(20.0)
 sol = diffeqr::dde.solve('f',u0,h,tspan,constant_lags=constant_lags)
 udf = as.data.frame(sol$u)
-plotly::plot_ly(udf, x = sol$t, y = ~V1, type = 'scatter', mode = 'lines') \%>\% plotly::add_trace(y = ~V2)
+#plotly::plot_ly(udf, x = sol$t, y = ~V1, type = 'scatter', mode = 'lines') \%>\%
+#plotly::add_trace(y = ~V2)
 
 }

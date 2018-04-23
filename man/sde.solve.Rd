@@ -50,7 +50,7 @@ g <- function(u,p,t) {
 u0 = 1/2
 tspan <- list(0.0,1.0)
 sol = diffeqr::sde.solve(f,g,u0,tspan)
-plotly::plot_ly(udf, x = sol$t, y = sol$u, type = 'scatter', mode = 'lines')
+#plotly::plot_ly(udf, x = sol$t, y = sol$u, type = 'scatter', mode = 'lines')
 
 # Diagonal Noise SDEs
 
@@ -70,7 +70,7 @@ end")
 tspan <- list(0.0,100.0)
 sol = diffeqr::sde.solve('f','g',u0,tspan,p=p,saveat=0.05)
 udf = as.data.frame(sol$u)
-plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
+#plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
 
 # Non-Diagonal Noise SDEs
 
@@ -94,6 +94,6 @@ tspan <- list(0.0,100.0)
 noise.dims = list(3,2)
 sol = diffeqr::sde.solve('f','g',u0,tspan,saveat=0.005,noise.dims=noise.dims)
 udf = as.data.frame(sol$u)
-plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
+#plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
 
 }

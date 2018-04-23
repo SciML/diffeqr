@@ -52,9 +52,9 @@ tspan = list(0.0,100000.0)
 differential_vars = c(TRUE,TRUE,FALSE)
 sol = diffeqr::dae.solve(f,du0,u0,tspan,differential_vars=differential_vars)
 udf = as.data.frame(sol$u)
-plotly::plot_ly(udf, x = sol$t, y = ~V1, type = 'scatter', mode = 'lines') \%>\%
-plotly::add_trace(y = ~V2) \%>\%
-plotly::add_trace(y = ~V3)
+#plotly::plot_ly(udf, x = sol$t, y = ~V1, type = 'scatter', mode = 'lines') \%>\%
+#plotly::add_trace(y = ~V2) \%>\%
+#plotly::add_trace(y = ~V3)
 
 f = JuliaCall::julia_eval("function f(out,du,u,p,t)
   out[1] = - 0.04u[1]              + 1e4*u[2]*u[3] - du[1]
