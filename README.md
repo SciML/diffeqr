@@ -317,13 +317,11 @@ plotly::add_trace(y = ~V3)
 Additionally, an in-place JIT compiled form for `f` can be used to enhance the speed:
 
 ```R
-f = JuliaCall::julia_eval("
-function f(out,du,u,p,t)
+f = JuliaCall::julia_eval("function f(out,du,u,p,t)
   out[1] = - 0.04u[1]              + 1e4*u[2]*u[3] - du[1]
   out[2] = + 0.04u[1] - 3e7*u[2]^2 - 1e4*u[2]*u[3] - du[2]
   out[3] = u[1] + u[2] + u[3] - 1.0
-end
-")
+end")
 sol = diffeqr::dae.solve('f',du0,u0,tspan,differential_vars=differential_vars)
 ```
 
