@@ -23,7 +23,7 @@ test_that('1D works',{
   expect_true(length(sol3$t) < 5)
 
   sol4 = diffeqr::ode.solve(f,u0,tspan,alg="Rosenbrock23()")
-  expect_true(length(sol4$t) < 10)
+  expect_true(length(sol4$t) < 15)
 })
 
 test_that('ODE system works',{
