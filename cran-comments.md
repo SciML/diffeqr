@@ -1,7 +1,7 @@
 ## Resubmission
 
-The CRAN tests were re-worked. See the CRAN Test Information section below. The NOTEs
-were handled as well.
+- Removed "in R" from title
+- Added examples to each of the package functions 
 
 ## Test Environments
 

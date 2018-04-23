@@ -5,6 +5,10 @@
 #'
 #' @param ... Parameters are passed down to JuliaCall::julia_setup
 #'
+#' @examples
+#'
+#' diffeqr::diffeq_setup()
+#'
 #' @export
 diffeq_setup <- function (...){
   julia <- JuliaCall::julia_setup(...)
@@ -26,6 +30,50 @@ diffeq_setup <- function (...){
 #' @param saveat the time points to save values at. Should be an array of times. Defaults to automatic.
 #'
 #' @return sol. Has the sol$t for the time points and sol$u for the values.
+#'
+#' @examples
+#'
+#' diffeqr::diffeq_setup()
+#'
+#' # Scalar ODEs
+#'
+#' f <- function(u,p,t) {
+#' return(1.01*u)
+#' }
+#' u0 = 1/2
+#' tspan <- list(0.0,1.0)
+#' sol = diffeqr::ode.solve(f,u0,tspan)
+#' plot(sol$t,sol$u,"l")
+#'
+#' saveat=1:10/10
+#' sol2 = diffeqr::ode.solve(f,u0,tspan,saveat=saveat)
+#' sol3 = diffeqr::ode.solve(f,u0,tspan,alg="Vern9()")
+#' sol4 = diffeqr::ode.solve(f,u0,tspan,alg="Rosenbrock23()")
+#'
+#' # Systems of ODEs
+#'
+#' f <- function(u,p,t) {
+#'   du1 = p[1]*(u[2]-u[1])
+#'   du2 = u[1]*(p[2]-u[3]) - u[2]
+#'   du3 = u[1]*u[2] - p[3]*u[3]
+#' return(c(du1,du2,du3))
+#' }
+#'
+#' u0 = c(1.0,0.0,0.0)
+#' tspan <- list(0.0,100.0)
+#' p = c(10.0,28.0,8/3)
+#' sol = diffeqr::ode.solve(f,u0,tspan,p=p)
+#' udf = as.data.frame(sol$u)
+#' matplot(sol$t,udf,"l",col=1:3)
+#' plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
+#'
+#' f <- JuliaCall::julia_eval("
+#' function f(du,u,p,t)
+#'  du[1] = 10.0*(u[2]-u[1])
+#'  du[2] = u[1]*(28.0-u[3]) - u[2]
+#'  du[3] = u[1]*u[2] - (8/3)*u[3]
+#' end")
+#' sol = diffeqr::ode.solve('f',u0,tspan)
 #'
 #' @export
 ode.solve <- function(f,u0,tspan,p=NULL,alg="nothing",reltol=1e-3,abstol=1e-6,saveat=NULL){
@@ -76,6 +124,67 @@ ode.solve <- function(f,u0,tspan,p=NULL,alg="nothing",reltol=1e-3,abstol=1e-6,sa
 #' @param noise.dims list of the dimensions for the noise rate term. Defaults to NULL which gives diagonal noise.
 #'
 #' @return sol. Has the sol$t for the time points and sol$u for the values.
+#'
+#' @examples
+#'
+#' diffeqr::diffeq_setup()
+#'
+#' # Scalar SDEs
+#'
+#' f <- function(u,p,t) {
+#'   return(1.01*u)
+#' }
+#' g <- function(u,p,t) {
+#'   return(0.87*u)
+#' }
+#' u0 = 1/2
+#' tspan <- list(0.0,1.0)
+#' sol = diffeqr::sde.solve(f,g,u0,tspan)
+#' plotly::plot_ly(udf, x = sol$t, y = sol$u, type = 'scatter', mode = 'lines')
+#'
+#' # Diagonal Noise SDEs
+#'
+#' f <- JuliaCall::julia_eval("
+#' function f(du,u,p,t)
+#'   du[1] = 10.0*(u[2]-u[1])
+#'   du[2] = u[1]*(28.0-u[3]) - u[2]
+#'   du[3] = u[1]*u[2] - (8/3)*u[3]
+#' end")
+#'
+#' g <- JuliaCall::julia_eval("
+#' function g(du,u,p,t)
+#'   du[1] = 0.3*u[1]
+#'   du[2] = 0.3*u[2]
+#'   du[3] = 0.3*u[3]
+#' end")
+#' tspan <- list(0.0,100.0)
+#' sol = diffeqr::sde.solve('f','g',u0,tspan,p=p,saveat=0.05)
+#' udf = as.data.frame(sol$u)
+#' plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
+#'
+#' # Non-Diagonal Noise SDEs
+#'
+#' f <- JuliaCall::julia_eval("
+#' function f(du,u,p,t)
+#'   du[1] = 10.0*(u[2]-u[1])
+#'   du[2] = u[1]*(28.0-u[3]) - u[2]
+#'   du[3] = u[1]*u[2] - (8/3)*u[3]
+#' end")
+#' g <- JuliaCall::julia_eval("
+#' function g(du,u,p,t)
+#'   du[1,1] = 0.3u[1]
+#'   du[2,1] = 0.6u[1]
+#'   du[3,1] = 0.2u[1]
+#'   du[1,2] = 1.2u[2]
+#'   du[2,2] = 0.2u[2]
+#'   du[3,2] = 0.3u[2]
+#' end")
+#' u0 = c(1.0,0.0,0.0)
+#' tspan <- list(0.0,100.0)
+#' noise.dims = list(3,2)
+#' sol = diffeqr::sde.solve('f','g',u0,tspan,saveat=0.005,noise.dims=noise.dims)
+#' udf = as.data.frame(sol$u)
+#' plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
 #'
 #' @export
 sde.solve <- function(f,g,u0,tspan,p=NULL,alg="nothing",noise.dims=NULL,reltol=1e-2,abstol=1e-2,saveat=NULL){
@@ -139,6 +248,33 @@ sde.solve <- function(f,g,u0,tspan,p=NULL,alg="nothing",noise.dims=NULL,reltol=1
 #'
 #' @return sol. Has the sol$t for the time points and sol$u for the values.
 #'
+#' @examples
+#'
+#' diffeqr::diffeq_setup()
+#'
+#' f <- function (du,u,p,t) {
+#'   resid1 = - 0.04*u[1]              + 1e4*u[2]*u[3] - du[1]
+#'   resid2 = + 0.04*u[1] - 3e7*u[2]^2 - 1e4*u[2]*u[3] - du[2]
+#'   resid3 = u[1] + u[2] + u[3] - 1.0
+#'   c(resid1,resid2,resid3)
+#' }
+#' u0 = c(1.0, 0, 0)
+#' du0 = c(-0.04, 0.04, 0.0)
+#' tspan = list(0.0,100000.0)
+#' differential_vars = c(TRUE,TRUE,FALSE)
+#' sol = diffeqr::dae.solve(f,du0,u0,tspan,differential_vars=differential_vars)
+#' udf = as.data.frame(sol$u)
+#' plotly::plot_ly(udf, x = sol$t, y = ~V1, type = 'scatter', mode = 'lines') %>%
+#' plotly::add_trace(y = ~V2) %>%
+#' plotly::add_trace(y = ~V3)
+#'
+#' f = JuliaCall::julia_eval("function f(out,du,u,p,t)
+#'   out[1] = - 0.04u[1]              + 1e4*u[2]*u[3] - du[1]
+#'   out[2] = + 0.04u[1] - 3e7*u[2]^2 - 1e4*u[2]*u[3] - du[2]
+#'   out[3] = u[1] + u[2] + u[3] - 1.0
+#' end")
+#' sol = diffeqr::dae.solve('f',du0,u0,tspan,differential_vars=differential_vars)
+#'
 #' @export
 dae.solve <- function(f,du0,u0,tspan,p=NULL,alg="nothing",reltol=1e-3,abstol=1e-6,saveat=NULL,differential_vars=NULL){
   if (is.character(f)){
@@ -195,6 +331,24 @@ dae.solve <- function(f,du0,u0,tspan,p=NULL,alg="nothing",reltol=1e-3,abstol=1e-
 #' @param constant_lags a vector of floats for the constant-time lags. Defaults to NULL.
 #'
 #' @return sol. Has the sol$t for the time points and sol$u for the values.
+#'
+#' @examples
+#'
+#' diffeqr::diffeq_setup()
+#'
+#' f = JuliaCall::julia_eval("function f(du, u, h, p, t)
+#'   du[1] = 1.1/(1 + sqrt(10)*(h(p, t-20)[1])^(5/4)) - 10*u[1]/(1 + 40*u[2])
+#'   du[2] = 100*u[1]/(1 + 40*u[2]) - 2.43*u[2]
+#' end")
+#' u0 = c(1.05767027/3, 1.030713491/3)
+#' h <- function (p,t){
+#'   c(1.05767027/3, 1.030713491/3)
+#' }
+#' tspan = list(0.0, 100.0)
+#' constant_lags = c(20.0)
+#' sol = diffeqr::dde.solve('f',u0,h,tspan,constant_lags=constant_lags)
+#' udf = as.data.frame(sol$u)
+#' plotly::plot_ly(udf, x = sol$t, y = ~V1, type = 'scatter', mode = 'lines') %>% plotly::add_trace(y = ~V2)
 #'
 #' @export
 dde.solve <- function(f,u0,h,tspan,p=NULL,alg="nothing",reltol=1e-3,abstol=1e-6,saveat=NULL,constant_lags=NULL){

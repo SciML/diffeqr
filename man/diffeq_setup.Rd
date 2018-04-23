@@ -13,3 +13,8 @@ diffeq_setup(...)
 This function initializes Julia and the DifferentialEquations.jl package.
 The first time will be long since it includes precompilation.
 }
+\examples{
+
+diffeqr::diffeq_setup()
+
+}
