@@ -38,6 +38,8 @@ Solves a DAE with f(du,u,p,t)=0 for u(0)=u0 over the tspan
 }
 \examples{
 
+\dontrun{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
+
 diffeqr::diffeq_setup()
 
 f <- function (du,u,p,t) {
@@ -62,5 +64,7 @@ f = JuliaCall::julia_eval("function f(out,du,u,p,t)
   out[3] = u[1] + u[2] + u[3] - 1.0
 end")
 sol = diffeqr::dae.solve('f',du0,u0,tspan,differential_vars=differential_vars)
+
+}
 
 }

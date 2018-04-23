@@ -33,6 +33,8 @@ Solves an ODE with u'=f(u,p,t), for u(0)=u0 over the tspan
 }
 \examples{
 
+\dontrun{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
+
 diffeqr::diffeq_setup()
 
 # Scalar ODEs
@@ -74,5 +76,7 @@ function f(du,u,p,t)
  du[3] = u[1]*u[2] - (8/3)*u[3]
 end")
 sol = diffeqr::ode.solve('f',u0,tspan)
+
+}
 
 }

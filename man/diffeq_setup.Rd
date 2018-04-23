@@ -15,6 +15,10 @@ The first time will be long since it includes precompilation.
 }
 \examples{
 
+\dontrun{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
+
 diffeqr::diffeq_setup()
+
+}
 
 }

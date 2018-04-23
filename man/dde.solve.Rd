@@ -37,6 +37,8 @@ Solves a DDE with f(u,p,t)=0 for u(0)=u0 over the tspan
 }
 \examples{
 
+\dontrun{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
+
 diffeqr::diffeq_setup()
 
 f = JuliaCall::julia_eval("function f(du, u, h, p, t)
@@ -53,5 +55,6 @@ sol = diffeqr::dde.solve('f',u0,h,tspan,constant_lags=constant_lags)
 udf = as.data.frame(sol$u)
 #plotly::plot_ly(udf, x = sol$t, y = ~V1, type = 'scatter', mode = 'lines') \%>\%
 #plotly::add_trace(y = ~V2)
+}
 
 }

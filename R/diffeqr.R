@@ -7,7 +7,11 @@
 #'
 #' @examples
 #'
+#' \dontrun{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
+#'
 #' diffeqr::diffeq_setup()
+#'
+#' }
 #'
 #' @export
 diffeq_setup <- function (...){
@@ -32,6 +36,8 @@ diffeq_setup <- function (...){
 #' @return sol. Has the sol$t for the time points and sol$u for the values.
 #'
 #' @examples
+#'
+#' \dontrun{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
 #'
 #' diffeqr::diffeq_setup()
 #'
@@ -74,6 +80,8 @@ diffeq_setup <- function (...){
 #'  du[3] = u[1]*u[2] - (8/3)*u[3]
 #' end")
 #' sol = diffeqr::ode.solve('f',u0,tspan)
+#'
+#' }
 #'
 #' @export
 ode.solve <- function(f,u0,tspan,p=NULL,alg="nothing",reltol=1e-3,abstol=1e-6,saveat=NULL){
@@ -126,6 +134,8 @@ ode.solve <- function(f,u0,tspan,p=NULL,alg="nothing",reltol=1e-3,abstol=1e-6,sa
 #' @return sol. Has the sol$t for the time points and sol$u for the values.
 #'
 #' @examples
+#'
+#' \dontrun{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
 #'
 #' diffeqr::diffeq_setup()
 #'
@@ -185,6 +195,8 @@ ode.solve <- function(f,u0,tspan,p=NULL,alg="nothing",reltol=1e-3,abstol=1e-6,sa
 #' sol = diffeqr::sde.solve('f','g',u0,tspan,saveat=0.005,noise.dims=noise.dims)
 #' udf = as.data.frame(sol$u)
 #' #plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
+#'
+#' }
 #'
 #' @export
 sde.solve <- function(f,g,u0,tspan,p=NULL,alg="nothing",noise.dims=NULL,reltol=1e-2,abstol=1e-2,saveat=NULL){
@@ -250,6 +262,8 @@ sde.solve <- function(f,g,u0,tspan,p=NULL,alg="nothing",noise.dims=NULL,reltol=1
 #'
 #' @examples
 #'
+#' \dontrun{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
+#'
 #' diffeqr::diffeq_setup()
 #'
 #' f <- function (du,u,p,t) {
@@ -274,6 +288,8 @@ sde.solve <- function(f,g,u0,tspan,p=NULL,alg="nothing",noise.dims=NULL,reltol=1
 #'   out[3] = u[1] + u[2] + u[3] - 1.0
 #' end")
 #' sol = diffeqr::dae.solve('f',du0,u0,tspan,differential_vars=differential_vars)
+#'
+#' }
 #'
 #' @export
 dae.solve <- function(f,du0,u0,tspan,p=NULL,alg="nothing",reltol=1e-3,abstol=1e-6,saveat=NULL,differential_vars=NULL){
@@ -334,6 +350,8 @@ dae.solve <- function(f,du0,u0,tspan,p=NULL,alg="nothing",reltol=1e-3,abstol=1e-
 #'
 #' @examples
 #'
+#' \dontrun{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
+#'
 #' diffeqr::diffeq_setup()
 #'
 #' f = JuliaCall::julia_eval("function f(du, u, h, p, t)
@@ -350,6 +368,7 @@ dae.solve <- function(f,du0,u0,tspan,p=NULL,alg="nothing",reltol=1e-3,abstol=1e-
 #' udf = as.data.frame(sol$u)
 #' #plotly::plot_ly(udf, x = sol$t, y = ~V1, type = 'scatter', mode = 'lines') %>%
 #' #plotly::add_trace(y = ~V2)
+#' }
 #'
 #' @export
 dde.solve <- function(f,u0,h,tspan,p=NULL,alg="nothing",reltol=1e-3,abstol=1e-6,saveat=NULL,constant_lags=NULL){

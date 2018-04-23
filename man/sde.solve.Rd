@@ -37,6 +37,8 @@ Solves an SDE with du=f(u,p,t)dt + g(u,p,t)dW_t, for u(0)=u0 over the tspan
 }
 \examples{
 
+\dontrun{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
+
 diffeqr::diffeq_setup()
 
 # Scalar SDEs
@@ -95,5 +97,7 @@ noise.dims = list(3,2)
 sol = diffeqr::sde.solve('f','g',u0,tspan,saveat=0.005,noise.dims=noise.dims)
 udf = as.data.frame(sol$u)
 #plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
+
+}
 
 }
