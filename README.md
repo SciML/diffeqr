@@ -15,7 +15,13 @@ please feel free to chat in the [Gitter channel](https://gitter.im/JuliaDiffEq/L
 
 ## Installation
 
-diffeqr is currently not registered into CRAN. Thus to use this package, use the following command:
+[diffeqr is registered into CRAN](https://cran.r-project.org/web/packages/diffeqr/index.html). Thus to use add the package, use:
+
+```R
+install.packages("diffeqr")
+```
+
+To install the master branch of the package (for developers), use:
 
 ```R
 devtools::install_github('JuliaDiffEq/diffeqr', build_vignettes=T)
