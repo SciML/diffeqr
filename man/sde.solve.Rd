@@ -37,7 +37,7 @@ Solves an SDE with du=f(u,p,t)dt + g(u,p,t)dW_t, for u(0)=u0 over the tspan
 }
 \examples{
 
-\dontrun{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
+\donttest{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
 
 diffeqr::diffeq_setup()
 

@@ -1,7 +1,7 @@
 ## Resubmission
 
-- Removed "in R" from title
-- Added examples to each of the package functions 
+- Changed quotatons in DESCRIPTION from ` to '.
+- Changed doc examples from dontrun to donttest
 
 ## Test Environments
 

@@ -7,7 +7,7 @@
 #'
 #' @examples
 #'
-#' \dontrun{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
+#' \donttest{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
 #'
 #' diffeqr::diffeq_setup()
 #'
@@ -37,7 +37,7 @@ diffeq_setup <- function (...){
 #'
 #' @examples
 #'
-#' \dontrun{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
+#' \donttest{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
 #'
 #' diffeqr::diffeq_setup()
 #'
@@ -135,7 +135,7 @@ ode.solve <- function(f,u0,tspan,p=NULL,alg="nothing",reltol=1e-3,abstol=1e-6,sa
 #'
 #' @examples
 #'
-#' \dontrun{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
+#' \donttest{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
 #'
 #' diffeqr::diffeq_setup()
 #'
@@ -262,7 +262,7 @@ sde.solve <- function(f,g,u0,tspan,p=NULL,alg="nothing",noise.dims=NULL,reltol=1
 #'
 #' @examples
 #'
-#' \dontrun{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
+#' \donttest{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
 #'
 #' diffeqr::diffeq_setup()
 #'
@@ -350,7 +350,7 @@ dae.solve <- function(f,du0,u0,tspan,p=NULL,alg="nothing",reltol=1e-3,abstol=1e-
 #'
 #' @examples
 #'
-#' \dontrun{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
+#' \donttest{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
 #'
 #' diffeqr::diffeq_setup()
 #'

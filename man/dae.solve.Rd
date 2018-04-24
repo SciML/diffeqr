@@ -38,7 +38,7 @@ Solves a DAE with f(du,u,p,t)=0 for u(0)=u0 over the tspan
 }
 \examples{
 
-\dontrun{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
+\donttest{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
 
 diffeqr::diffeq_setup()
 
