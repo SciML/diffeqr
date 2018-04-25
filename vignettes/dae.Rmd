@@ -1,10 +1,10 @@
 ---
 title: "Solving Differential-Algebraic Equations (DAE) in R with diffeqr"
-author: "Vignette Author"
+author: "Chris Rackauckas"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteIndexEntry{Solving Differential-Algebraic Equations (DAE) in R with diffeqr}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -42,6 +42,8 @@ plotly::plot_ly(udf, x = sol$t, y = ~V1, type = 'scatter', mode = 'lines') %>%
 plotly::add_trace(y = ~V2) %>%
 plotly::add_trace(y = ~V3)
 ```
+
+![daes](https://user-images.githubusercontent.com/1814174/39022955-d600814c-43ec-11e8-91bb-e096ff3d3fb7.png)
 
 Additionally, an in-place JIT compiled form for `f` can be used to enhance the speed:
 

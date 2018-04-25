@@ -4,7 +4,7 @@ author: "Chris Rackauckas"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteIndexEntry{Solving Stochastic Differential Equations (SDE) in R with diffeqr}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -33,6 +33,8 @@ tspan <- list(0.0,1.0)
 sol = diffeqr::sde.solve(f,g,u0,tspan)
 plotly::plot_ly(udf, x = sol$t, y = sol$u, type = 'scatter', mode = 'lines')
 ```
+
+![geometric_sdes](https://user-images.githubusercontent.com/1814174/39020683-9ea22b56-43e2-11e8-97f5-0c2a3ea69a2e.png)
 
 ### Systems of Diagonal Noise SDEs
 
@@ -81,6 +83,8 @@ udf = as.data.frame(sol$u)
 #plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
 ```
 
+![stochastic_lorenz](https://user-images.githubusercontent.com/1814174/39019723-216c3210-43df-11e8-82c0-2e676f53e235.png)
+
 ### Systems of SDEs with Non-Diagonal Noise
 
 In many cases you may want to share noise terms across the system. This is known as non-diagonal noise. The 
@@ -112,3 +116,5 @@ sol = diffeqr::sde.solve('f','g',u0,tspan,saveat=0.005,noise.dims=noise.dims)
 udf = as.data.frame(sol$u)
 plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
 ```
+
+![noise_corr](https://user-images.githubusercontent.com/1814174/39022036-8958319a-43e8-11e8-849b-c21bcb2ec21e.png)

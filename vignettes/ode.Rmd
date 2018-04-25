@@ -4,7 +4,7 @@ author: "Chris Rackauckas"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteIndexEntry{Solving Ordinary Differential Equations (ODE) in R with diffeqr}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -52,6 +52,8 @@ and `sol$u` are the values. We can check it by plotting the solution:
 plot(sol$t,sol$u,"l")
 ```
 
+![linear_ode](https://user-images.githubusercontent.com/1814174/39011970-e04f1fe8-43c7-11e8-8da3-848362691783.png)
+
 ### Systems of ODEs
 
 Now let's solve the Lorenz equations. In this case, our initial condition is a vector and our derivative functions
@@ -93,6 +95,8 @@ Now we can use the Plotly package to draw a phase plot:
 plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
 ```
 
+![timeseries](https://user-images.githubusercontent.com/1814174/39012314-ef7a8fe2-43c8-11e8-9dde-1a8b87d3cfa4.png)
+
 Plotly is much prettier!
 
 ### Option Handling
@@ -112,6 +116,8 @@ sol = diffeqr::ode.solve(f,u0,tspan,p=p,abstol=abstol,reltol=reltol,saveat=savea
 udf = as.data.frame(sol$u)
 plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
 ```
+
+![precise_solution](https://user-images.githubusercontent.com/1814174/39012651-e03124e6-43c9-11e8-8496-bbee87987a37.png)
 
 We can also choose to use a different algorithm. The choice is done using a string that matches the Julia syntax. See
 [the ODE tutorial for details](http://docs.juliadiffeq.org/latest/tutorials/ode_example.html#Choosing-a-Solver-Algorithm-1).
