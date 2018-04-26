@@ -1,8 +1,3 @@
-## Resubmission
-
-- Changed quotatons in DESCRIPTION from ` to '.
-- Changed doc examples from dontrun to donttest
-
 ## Test Environments
 
 * local Windows 10 install, R 3.4.4
@@ -13,12 +8,12 @@
 
 ## CRAN Test Information
 
-Proper use of this package requires a Julia and DifferentialEquations.jl installation. 
-This is noted in the installation guide. The Travis and AppVeyor tests show that on 
-the major operating systems, if this is installed, then the package will successfully 
+Proper use of this package requires a Julia and DifferentialEquations.jl installation.
+This is noted in the installation guide. The Travis and AppVeyor tests show that on
+the major operating systems, if this is installed, then the package will successfully
 pass its tests. However, since these softwares are not available on all of the CRAN
-computers the tests fail as expected there, and are thus skipped. 
-        
+computers the tests fail as expected there, and are thus skipped.
+
 ## R CMD check results
 
 1 Note: I'm not sure what it's for.
