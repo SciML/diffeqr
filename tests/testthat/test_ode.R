@@ -16,7 +16,7 @@ test_that('1D works',{
 
   saveat=1:10/10
   sol2 = diffeqr::ode.solve(f,u0,tspan,saveat=saveat)
-  expect_true(length(sol2$t) == 11)
+  expect_true(length(sol2$t) == 10)
   expect_equal(sol$u[length(sol$u)],sol2$u[length(sol2$u)])
 
   sol3 = diffeqr::ode.solve(f,u0,tspan,alg="Vern9()")
