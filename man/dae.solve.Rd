@@ -4,8 +4,8 @@
 \alias{dae.solve}
 \title{Solve Differential-Algebraic Equations (DAE)}
 \usage{
-dae.solve(f, du0, u0, tspan, p = NULL, alg = "nothing", reltol = 0.001,
-  abstol = 1e-06, saveat = NULL, differential_vars = NULL)
+dae.solve(f, du0, u0, tspan, p = NULL, alg = "nothing", maxiters = 1000000,
+          reltol = 0.001, abstol = 1e-06, saveat = NULL, differential_vars = NULL)
 }
 \arguments{
 \item{f}{the implicit ODE function.}
