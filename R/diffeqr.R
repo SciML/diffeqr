@@ -30,7 +30,9 @@ diffeq_setup <- function (...){
 #' @param alg the algorithm used to solve the differential equation. Defaults to an adaptive choice.
 #'        Algorithm choices are done through a string which matches the DifferentialEquations.jl form.
 #' @param reltol the relative tolerance of the ODE solver. Defaults to 1e-3.
-#' @param abstol the absolute tolerance of the ODE solver. Defaults to 1e-6
+#' @param abstol the absolute tolerance of the ODE solver. Defaults to 1e-6.
+#' @param maxiters the maximum number of iterations the adaptive solver is allowed to try before exiting.
+#'        Defualt value is 1000000.
 #' @param saveat the time points to save values at. Should be an array of times. Defaults to automatic.
 #'
 #' @return sol. Has the sol$t for the time points and sol$u for the values.
@@ -84,7 +86,7 @@ diffeq_setup <- function (...){
 #' }
 #'
 #' @export
-ode.solve <- function(f,u0,tspan,p=NULL,alg="nothing",reltol=1e-3,abstol=1e-6,saveat=NULL){
+ode.solve <- function(f,u0,tspan,p=NULL,alg="nothing",reltol=1e-3,abstol=1e-6,maxiters = 1000000,saveat=NULL){
   if (is.character(f)){
     fname = f
   } else {
@@ -109,7 +111,7 @@ ode.solve <- function(f,u0,tspan,p=NULL,alg="nothing",reltol=1e-3,abstol=1e-6,sa
   }
   jleval = stringr::str_interp("prob = ODEProblem(${fname},u0,tspan,${p_str})")
   JuliaCall::julia_eval(jleval)
-  jleval = stringr::str_interp("sol = solve(prob,${alg},reltol=${reltol},abstol=${abstol}, saveat=${saveat_str}); nothing")
+  jleval = stringr::str_interp("sol = solve(prob,${alg},reltol=${reltol},abstol=${abstol}, maxiters = ${maxiters}, saveat=${saveat_str}); nothing")
   JuliaCall::julia_eval(jleval)
   u = JuliaCall::julia_eval("typeof(u0)<:Number ? Array(sol) : sol'")
   t = JuliaCall::julia_eval("sol.t")
@@ -127,7 +129,9 @@ ode.solve <- function(f,u0,tspan,p=NULL,alg="nothing",reltol=1e-3,abstol=1e-6,sa
 #' @param alg the algorithm used to solve the differential equation. Defaults to an adaptive choice.
 #'        Algorithm choices are done through a string which matches the DifferentialEquations.jl form.
 #' @param reltol the relative tolerance of the ODE solver. Defaults to 1e-3.
-#' @param abstol the absolute tolerance of the ODE solver. Defaults to 1e-6
+#' @param abstol the absolute tolerance of the ODE solver. Defaults to 1e-6.
+#' @param maxiters the maximum number of iterations the adaptive solver is allowed to try before exiting.
+#'        Defualt value is 1000000.
 #' @param saveat the time points to save values at. Should be an array of times. Defaults to automatic.
 #' @param noise.dims list of the dimensions for the noise rate term. Defaults to NULL which gives diagonal noise.
 #'
@@ -199,7 +203,8 @@ ode.solve <- function(f,u0,tspan,p=NULL,alg="nothing",reltol=1e-3,abstol=1e-6,sa
 #' }
 #'
 #' @export
-sde.solve <- function(f,g,u0,tspan,p=NULL,alg="nothing",noise.dims=NULL,reltol=1e-2,abstol=1e-2,saveat=NULL){
+sde.solve <- function(f,g,u0,tspan,p=NULL,alg="nothing",noise.dims=NULL,maxiters = 1000000,
+                      reltol=1e-2,abstol=1e-2,saveat=NULL){
   if (is.character(f)){
     fname = f
   } else {
@@ -235,7 +240,7 @@ sde.solve <- function(f,g,u0,tspan,p=NULL,alg="nothing",noise.dims=NULL,reltol=1
   }
   jleval = stringr::str_interp("prob = SDEProblem(${fname},${gname},u0,tspan,${p_str},noise_rate_prototype=${nrp_str})")
   JuliaCall::julia_eval(jleval)
-  jleval = stringr::str_interp("sol = solve(prob,${alg},reltol=${reltol},abstol=${abstol}, saveat=${saveat_str}); nothing")
+  jleval = stringr::str_interp("sol = solve(prob,${alg},reltol=${reltol},abstol=${abstol}, maxiters=${maxiters},saveat=${saveat_str}); nothing")
   JuliaCall::julia_eval(jleval)
   u = JuliaCall::julia_eval("typeof(u0)<:Number ? Array(sol) : sol'")
   t = JuliaCall::julia_eval("sol.t")
@@ -255,7 +260,9 @@ sde.solve <- function(f,g,u0,tspan,p=NULL,alg="nothing",noise.dims=NULL,reltol=1
 #' @param differential_vars boolean array declaring which variables are differential. All falses correspond to
 #'        purely algebraic variables.
 #' @param reltol the relative tolerance of the ODE solver. Defaults to 1e-3.
-#' @param abstol the absolute tolerance of the ODE solver. Defaults to 1e-6
+#' @param abstol the absolute tolerance of the ODE solver. Defaults to 1e-6.
+#' @param maxiters the maximum number of iterations the adaptive solver is allowed to try before exiting.
+#'        Defualt value is 1000000.
 #' @param saveat the time points to save values at. Should be an array of times. Defaults to automatic.
 #'
 #' @return sol. Has the sol$t for the time points and sol$u for the values.
@@ -292,7 +299,7 @@ sde.solve <- function(f,g,u0,tspan,p=NULL,alg="nothing",noise.dims=NULL,reltol=1
 #' }
 #'
 #' @export
-dae.solve <- function(f,du0,u0,tspan,p=NULL,alg="nothing",reltol=1e-3,abstol=1e-6,saveat=NULL,differential_vars=NULL){
+dae.solve <- function(f,du0,u0,tspan,p=NULL,alg="nothing",reltol=1e-3,abstol=1e-6,maxiters = 1000000,saveat=NULL,differential_vars=NULL){
   if (is.character(f)){
     fname = f
   } else {
@@ -324,7 +331,7 @@ dae.solve <- function(f,du0,u0,tspan,p=NULL,alg="nothing",reltol=1e-3,abstol=1e-
   }
   jleval = stringr::str_interp("prob = DAEProblem(${fname},du0,u0,tspan,${p_str},differential_vars=${diffvar_str})")
   JuliaCall::julia_eval(jleval)
-  jleval = stringr::str_interp("sol = solve(prob,${alg},reltol=${reltol},abstol=${abstol}, saveat=${saveat_str}); nothing")
+  jleval = stringr::str_interp("sol = solve(prob,${alg},reltol=${reltol},abstol=${abstol}, maxiters=${maxiters}, saveat=${saveat_str}); nothing")
   JuliaCall::julia_eval(jleval)
   u = JuliaCall::julia_eval("typeof(u0)<:Number ? Array(sol) : sol'")
   t = JuliaCall::julia_eval("sol.t")
@@ -342,7 +349,9 @@ dae.solve <- function(f,du0,u0,tspan,p=NULL,alg="nothing",reltol=1e-3,abstol=1e-
 #' @param alg the algorithm used to solve the differential equation. Defaults to an adaptive choice.
 #'        Algorithm choices are done through a string which matches the DifferentialEquations.jl form.
 #' @param reltol the relative tolerance of the ODE solver. Defaults to 1e-3.
-#' @param abstol the absolute tolerance of the ODE solver. Defaults to 1e-6
+#' @param abstol the absolute tolerance of the ODE solver. Defaults to 1e-6.
+#' @param maxiters the maximum number of iterations the adaptive solver is allowed to try before exiting.
+#'        Defualt value is 1000000.
 #' @param saveat the time points to save values at. Should be an array of times. Defaults to automatic.
 #' @param constant_lags a vector of floats for the constant-time lags. Defaults to NULL.
 #'
@@ -371,7 +380,7 @@ dae.solve <- function(f,du0,u0,tspan,p=NULL,alg="nothing",reltol=1e-3,abstol=1e-
 #' }
 #'
 #' @export
-dde.solve <- function(f,u0,h,tspan,p=NULL,alg="nothing",reltol=1e-3,abstol=1e-6,saveat=NULL,constant_lags=NULL){
+dde.solve <- function(f,u0,h,tspan,p=NULL,alg="nothing",reltol=1e-3,abstol=1e-6,maxiters = 1000000,saveat=NULL,constant_lags=NULL){
   if (is.character(f)){
     fname = f
   } else {
@@ -409,7 +418,7 @@ dde.solve <- function(f,u0,h,tspan,p=NULL,alg="nothing",reltol=1e-3,abstol=1e-6,
   }
   jleval = stringr::str_interp("prob = DDEProblem(${fname},u0,${hname},tspan,${p_str},constant_lags=${cl_str})")
   JuliaCall::julia_eval(jleval)
-  jleval = stringr::str_interp("sol = solve(prob,${alg},reltol=${reltol},abstol=${abstol}, saveat=${saveat_str}); nothing")
+  jleval = stringr::str_interp("sol = solve(prob,${alg},reltol=${reltol},abstol=${abstol}, maxiters=${maxiters},saveat=${saveat_str}); nothing")
   JuliaCall::julia_eval(jleval)
   u = JuliaCall::julia_eval("typeof(u0)<:Number ? Array(sol) : sol'")
   t = JuliaCall::julia_eval("sol.t")
