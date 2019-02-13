@@ -4,8 +4,8 @@
 \alias{dde.solve}
 \title{Solve Delay Differential Equations (DDE)}
 \usage{
-dde.solve(f, u0, h, tspan, p = NULL, alg = "nothing", reltol = 0.001,
-  abstol = 1e-06, saveat = NULL, constant_lags = NULL)
+dde.solve(f, u0, h, tspan, p = NULL, alg = "nothing", maxiters = 1000000,
+          reltol = 0.001, abstol = 1e-06, saveat = NULL, constant_lags = NULL)
 }
 \arguments{
 \item{f}{the implicit ODE function.}
