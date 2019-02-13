@@ -4,8 +4,8 @@
 \alias{sde.solve}
 \title{Solve Stochastic Differential Equations (SDE)}
 \usage{
-sde.solve(f, g, u0, tspan, p = NULL, alg = "nothing", noise.dims = NULL,
-  reltol = 0.01, abstol = 0.01, saveat = NULL)
+sde.solve(f, g, u0, tspan, p = NULL, alg = "nothing", noise.dims = NULL, 
+          maxiters = 1000000, reltol = 0.01, abstol = 0.01, saveat = NULL)
 }
 \arguments{
 \item{f}{the drift function.}
