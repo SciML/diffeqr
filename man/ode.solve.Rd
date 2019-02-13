@@ -4,8 +4,8 @@
 \alias{ode.solve}
 \title{Solve Ordinary Differential Equations (ODE)}
 \usage{
-ode.solve(f, u0, tspan, p = NULL, alg = "nothing", reltol = 0.001,
-  abstol = 1e-06, saveat = NULL)
+ode.solve(f, u0, tspan, p = NULL, alg = "nothing", maxiters = 1000000,
+          reltol = 0.001, abstol = 1e-06, saveat = NULL)
 }
 \arguments{
 \item{f}{the derivative function.}
