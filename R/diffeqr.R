@@ -5,6 +5,7 @@
 #' Additonally, this will install Julia and the required packages
 #' if they are missing.
 #'
+#' @param pkg.check logical, check for DifferentialEquations.jl package and install if necessary
 #' @param ... Parameters are passed down to JuliaCall::julia_setup
 #'
 #' @examples
@@ -16,14 +17,13 @@
 #' }
 #'
 #' @export
-diffeq_setup <- function (...){
-
+diffeq_setup <- function (pkg_check=FALSE, ...){
   if is.null(julia_locate()){
     JuliaCall::julia_setup()
   }
-
+  
   julia <- JuliaCall::julia_setup(...)
-  JuliaCall::julia_install_package_if_needed("DifferentialEquations")
+  if(pkg_check) JuliaCall::julia_install_package_if_needed("DifferentialEquations")
   JuliaCall::julia_library("DifferentialEquations")
 
   JuliaCall::julia_install_package_if_needed("ModelingToolkit")
