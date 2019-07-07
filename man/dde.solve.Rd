@@ -4,8 +4,9 @@
 \alias{dde.solve}
 \title{Solve Delay Differential Equations (DDE)}
 \usage{
-dde.solve(f, u0, h, tspan, p = NULL, alg = "nothing", maxiters = 1000000,
-          reltol = 0.001, abstol = 1e-06, saveat = NULL, constant_lags = NULL)
+dde.solve(f, u0, h, tspan, p = NULL, alg = "nothing", reltol = 0.001,
+  abstol = 1e-06, maxiters = 1e+06, saveat = NULL,
+  constant_lags = NULL)
 }
 \arguments{
 \item{f}{the implicit ODE function.}
@@ -23,7 +24,10 @@ Algorithm choices are done through a string which matches the DifferentialEquati
 
 \item{reltol}{the relative tolerance of the ODE solver. Defaults to 1e-3.}
 
-\item{abstol}{the absolute tolerance of the ODE solver. Defaults to 1e-6}
+\item{abstol}{the absolute tolerance of the ODE solver. Defaults to 1e-6.}
+
+\item{maxiters}{the maximum number of iterations the adaptive solver is allowed to try before exiting.
+Defualt value is 1000000.}
 
 \item{saveat}{the time points to save values at. Should be an array of times. Defaults to automatic.}
 

@@ -1,7 +1,7 @@
 Package: diffeqr
 Type: Package
 Title: Solving Differential Equations (ODEs, SDEs, DDEs, DAEs)
-Version: 0.1.1
+Version: 0.1.2
 Authors@R: person("Christopher", "Rackauckas", email = "me@chrisrackauckas.com", role = c("aut", "cre"))
 Description: An interface to 'DifferentialEquations.jl' <http://docs.juliadiffeq.org/latest/> from the R programming language.
   It has unique high performance methods for solving ordinary differential equations (ODE), stochastic differential equations (SDE),
@@ -17,7 +17,7 @@ SystemRequirements: Julia (>= 0.6.0), DifferentialEquations.jl
 Imports:
   JuliaCall,
   stringr
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.1
 Suggests: testthat,
     knitr,
     rmarkdown

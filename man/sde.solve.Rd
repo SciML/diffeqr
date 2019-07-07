@@ -4,8 +4,9 @@
 \alias{sde.solve}
 \title{Solve Stochastic Differential Equations (SDE)}
 \usage{
-sde.solve(f, g, u0, tspan, p = NULL, alg = "nothing", noise.dims = NULL, 
-          maxiters = 1000000, reltol = 0.01, abstol = 0.01, saveat = NULL)
+sde.solve(f, g, u0, tspan, p = NULL, alg = "nothing",
+  noise.dims = NULL, maxiters = 1e+06, reltol = 0.01,
+  abstol = 0.01, saveat = NULL)
 }
 \arguments{
 \item{f}{the drift function.}
@@ -23,9 +24,12 @@ Algorithm choices are done through a string which matches the DifferentialEquati
 
 \item{noise.dims}{list of the dimensions for the noise rate term. Defaults to NULL which gives diagonal noise.}
 
+\item{maxiters}{the maximum number of iterations the adaptive solver is allowed to try before exiting.
+Defualt value is 1000000.}
+
 \item{reltol}{the relative tolerance of the ODE solver. Defaults to 1e-3.}
 
-\item{abstol}{the absolute tolerance of the ODE solver. Defaults to 1e-6}
+\item{abstol}{the absolute tolerance of the ODE solver. Defaults to 1e-6.}
 
 \item{saveat}{the time points to save values at. Should be an array of times. Defaults to automatic.}
 }
