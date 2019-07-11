@@ -16,7 +16,9 @@ computers the tests fail as expected there, and are thus skipped.
 
 ## R CMD check results
 
-1 Note: I'm not sure what it's for.
+I would like to keep the CITATION.bib file to conform to the standard format
+so that way it can get indexed by non-R tools. The R standard citation is
+also included in inst
 
 ## Downstream Dependencies
 
