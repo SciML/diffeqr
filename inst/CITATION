@@ -9,5 +9,5 @@ bibentry(bibtype = "Article",
          year = 2017,
          volume = 5,
          number = 1,
-         url = "https://openresearchsoftware.metajnl.com/articles/10.5334/jors.151/"
+         url = "https://openresearchsoftware.metajnl.com/articles/10.5334/jors.151/",
          note = note)
