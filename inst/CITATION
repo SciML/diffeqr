@@ -1,7 +1,7 @@
 note <- sprintf("R package version %s", meta$Version)
 
 bibentry(bibtype = "Article",
-         doi = 10.5334/jors.151,
+         doi = "10.5334/jors.151",
          journal = "The Journal of Open Source Software",
          title = "DifferentialEquations.jl – A Performant and Feature-Rich Ecosystem for Solving Differential Equations in Julia",
          author = c(person("Chris", "Rackauckas"),
