@@ -134,7 +134,8 @@ ode.solve <- function(f,u0,tspan,p=NULL,alg="nothing",reltol=1e-3,abstol=1e-6,ma
 #'        Defualt value is 1000000.
 #' @param saveat the time points to save values at. Should be an array of times. Defaults to automatic.
 #' @param noise.dims list of the dimensions for the noise rate term. Defaults to NULL which gives diagonal noise.
-#'
+#' @param seed the seed for the random numbers. Defaults to NULL which gives a random seed.
+#`
 #' @return sol. Has the sol$t for the time points and sol$u for the values.
 #'
 #' @examples
