@@ -134,7 +134,7 @@ ode.solve <- function(f,u0,tspan,p=NULL,alg="nothing",reltol=1e-3,abstol=1e-6,ma
 #'        Defualt value is 1000000.
 #' @param saveat the time points to save values at. Should be an array of times. Defaults to automatic.
 #' @param noise.dims list of the dimensions for the noise rate term. Defaults to NULL which gives diagonal noise.
-#' @param seed the integer seed for the random numbers. Defaults to NULL which gives a random seed.
+#' @param seed the integer seed for the random numbers. Defaults to 0 which gives a random seed.
 #`
 #' @return sol. Has the sol$t for the time points and sol$u for the values.
 #'
@@ -205,7 +205,7 @@ ode.solve <- function(f,u0,tspan,p=NULL,alg="nothing",reltol=1e-3,abstol=1e-6,ma
 #'
 #' @export
 sde.solve <- function(f,g,u0,tspan,p=NULL,alg="nothing",noise.dims=NULL,maxiters = 1000000,
-                      reltol=1e-2,abstol=1e-2,saveat=NULL,seed=NULL){
+                      reltol=1e-2,abstol=1e-2,saveat=NULL,seed=0){
   if (is.character(f)){
     fname = f
   } else {
@@ -239,15 +239,9 @@ sde.solve <- function(f,g,u0,tspan,p=NULL,alg="nothing",noise.dims=NULL,maxiters
   } else {
     nrp_str = stringr::str_interp("zeros(${noise.dims[1]},${noise.dims[2]})")
   }
-    if (is.null(noise.dims)) {
-    seed_str = "nothing"
-  } else {
-    seed_str = "seed"
-    JuliaCall::julia_assign("seed", seed)
-  }
   jleval = stringr::str_interp("prob = SDEProblem(${fname},${gname},u0,tspan,${p_str},noise_rate_prototype=${nrp_str})")
   JuliaCall::julia_eval(jleval)
-  jleval = stringr::str_interp("sol = solve(prob,${alg},reltol=${reltol},abstol=${abstol}, maxiters=${maxiters},saveat=${saveat_str}, seed = ${seed_str}); nothing")
+  jleval = stringr::str_interp("sol = solve(prob,${alg},reltol=${reltol},abstol=${abstol}, maxiters=${maxiters},saveat=${saveat_str}, seed = ${seed}); nothing")
   JuliaCall::julia_eval(jleval)
   u = JuliaCall::julia_eval("typeof(u0)<:Number ? Array(sol) : sol'")
   t = JuliaCall::julia_eval("sol.t")

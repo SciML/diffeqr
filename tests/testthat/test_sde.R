@@ -16,6 +16,23 @@ test_that('1D works',{
 
   expect_true(length(sol$t) > 10)
 })
+
+test_that('seed works',{
+
+  skip_on_cran()
+
+  f <- function(u,p,t) {
+    return(1.01*u)
+  }
+  g <- function(u,p,t) {
+    return(0.87*u)
+  }
+  u0 = 1/2
+  tspan <- list(0.0,1.0)
+  sol = diffeqr::sde.solve(f,g,u0,tspan,seed=1)
+  sol2 = diffeqr::sde.solve(f,g,u0,tspan,seed=1)
+  expect_true(sum(sol$u - sol2$u) == 0)
+})
 #plot(sol$t,sol$u,"l")
 #plotly::plot_ly(x = sol$t, y = sol$u, type = 'scatter', mode = 'lines')
 
