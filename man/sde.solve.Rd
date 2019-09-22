@@ -33,6 +33,9 @@ Defualt value is 1000000.}
 
 \item{saveat}{the time points to save values at. Should be an array of times. Defaults to automatic.}
 }
+
+\item{saveat}{the seed for the random numbers. Defaults to zero for a random seed.}
+}
 \value{
 sol. Has the sol$t for the time points and sol$u for the values.
 }
