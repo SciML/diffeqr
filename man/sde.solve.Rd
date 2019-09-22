@@ -6,7 +6,7 @@
 \usage{
 sde.solve(f, g, u0, tspan, p = NULL, alg = "nothing",
   noise.dims = NULL, maxiters = 1e+06, reltol = 0.01,
-  abstol = 0.01, saveat = NULL)
+  abstol = 0.01, saveat = 0)
 }
 \arguments{
 \item{f}{the drift function.}
