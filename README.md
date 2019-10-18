@@ -15,7 +15,7 @@ please feel free to chat in the [Gitter channel](https://gitter.im/JuliaDiffEq/L
 
 ## Installation
 
-[diffeqr is registered into CRAN](https://CRAN.R-project.org/package=diffeqr). Thus to use add the package, use:
+[diffeqr is registered into CRAN](https://CRAN.R-project.org/package=diffeqr). Thus to add the package, use:
 
 ```R
 install.packages("diffeqr")
