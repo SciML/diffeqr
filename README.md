@@ -80,7 +80,7 @@ in time via
 sol$.(0.2)
 ```
 
-an a high order interpolation will compute the value at `t=0.2`. We can check 
+and a high order interpolation will compute the value at `t=0.2`. We can check 
 the solution by plotting it:
 
 ```R 
@@ -220,7 +220,7 @@ JuliaCall::julia_assign("u0", u0)
 JuliaCall::julia_assign("p", p)
 JuliaCall::julia_assign("tspan", tspan)
 prob3 = JuliaCall::julia_eval("ODEProblem(julf, u0, tspan, p)")
-sol = de$solve(prob3,de$Tsit5())```
+sol = de$solve(prob3,de$Tsit5())
 ```
 
 To demonstrate the performance advantage, let's time them all:
@@ -247,15 +247,18 @@ Solving stochastic differential equations (SDEs) is the similar to ODEs. To solv
 two functions: `f` and `g`, where `du = f(u,t)dt + g(u,t)dW_t`
 
 ```r
+de <- diffeqr::diffeq_setup()
 f <- function(u,p,t) {
   return(1.01*u)
 }
 g <- function(u,p,t) {
   return(0.87*u)
 }
-u0 = 1/2
+u0 <- 1/2
 tspan <- list(0.0,1.0)
-sol = diffeqr::sde.solve(f,g,u0,tspan)
+prob <- de$SDEProblem(f,g,u0,tspan)
+sol <- de$solve(prob)
+udf <- as.data.frame(t(sapply(sol$u,identity)))
 plotly::plot_ly(udf, x = sol$t, y = sol$u, type = 'scatter', mode = 'lines')
 ```
 
@@ -277,38 +280,41 @@ f <- function(u,p,t) {
 g <- function(u,p,t) {
   return(c(0.3*u[1],0.3*u[2],0.3*u[3]))
 }
-u0 = c(1.0,0.0,0.0)
-tspan <- list(0.0,1.0)
-p = c(10.0,28.0,8/3)
-sol = diffeqr::sde.solve(f,g,u0,tspan,p=p,saveat=0.005)
-udf = as.data.frame(sol$u)
-plotly::plot_ly(x = sol$t, y = sol$u, type = 'scatter', mode = 'lines')
+u0 <- c(1.0,0.0,0.0)
+tspan <- c(0.0,1.0)
+p <- c(10.0,28.0,8/3)
+prob <- de$SDEProblem(f,g,u0,tspan,p)
+sol <- de$solve(prob,saveat=0.005)
+udf <- as.data.frame(t(sapply(sol$u,identity)))
+plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
 ```
 
 Using a JIT compiled function for the drift and diffusion functions can greatly enhance the speed here.
 With the speed increase we can comfortably solve over long time spans:
 
 ```R
-f <- JuliaCall::julia_eval("
-function f(du,u,p,t)
-  du[1] = 10.0*(u[2]-u[1])
-  du[2] = u[1]*(28.0-u[3]) - u[2]
-  du[3] = u[1]*u[2] - (8/3)*u[3]
-end")
-
-g <- JuliaCall::julia_eval("
-function g(du,u,p,t)
-  du[1] = 0.3*u[1]
-  du[2] = 0.3*u[2]
-  du[3] = 0.3*u[3]
-end")
-tspan <- list(0.0,100.0)
-sol = diffeqr::sde.solve('f','g',u0,tspan,p=p,saveat=0.05)
-udf = as.data.frame(sol$u)
-#plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
+tspan <- c(0.0,100.0)
+prob <- de$SDEProblem(f,g,u0,tspan,p)
+fastprob <- diffeqr::jitoptimize_sde(de,prob)
+sol <- de$solve(fastprob,saveat=0.005)
+udf <- as.data.frame(t(sapply(sol$u,identity)))
+plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
 ```
 
 ![stochastic_lorenz](https://user-images.githubusercontent.com/1814174/39019723-216c3210-43df-11e8-82c0-2e676f53e235.png)
+
+Let's see how much faster the JIT-compiled version was:
+
+```R
+> system.time({ for (i in 1:5){ de$solve(prob    ) }})
+   user  system elapsed 
+ 146.40    0.75  147.22 
+> system.time({ for (i in 1:5){ de$solve(fastprob) }})
+   user  system elapsed 
+   1.07    0.10    1.17
+```
+
+Holy Monster's Inc. that's about 145x faster.
 
 ### Systems of SDEs with Non-Diagonal Noise
 
@@ -334,24 +340,31 @@ function g(du,u,p,t)
   du[2,2] = 0.2u[2]
   du[3,2] = 0.3u[2]
 end")
-u0 = c(1.0,0.0,0.0)
-tspan <- list(0.0,100.0)
-noise.dims = list(3,2)
-sol = diffeqr::sde.solve('f','g',u0,tspan,saveat=0.005,noise.dims=noise.dims)
-udf = as.data.frame(sol$u)
+u0 <- c(1.0,0.0,0.0)
+tspan <- c(0.0,100.0)
+noise_rate_prototype <- matrix(c(0.0,0.0,0.0,0.0,0.0,0.0), nrow = 3, ncol = 2)
+
+JuliaCall::julia_assign("u0", u0)
+JuliaCall::julia_assign("tspan", tspan)
+JuliaCall::julia_assign("noise_rate_prototype", noise_rate_prototype)
+prob <- JuliaCall::julia_eval("SDEProblem(f, g, u0, tspan, p, noise_rate_prototype=noise_rate_prototype)")
+sol <- de$solve(prob)
+udf <- as.data.frame(t(sapply(sol$u,identity)))
 plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
 ```
 
 ![noise_corr](https://user-images.githubusercontent.com/1814174/39022036-8958319a-43e8-11e8-849b-c21bcb2ec21e.png)
 
 Here you can see that the warping effect of the noise correlations is quite visible!
+Note that we applied JIT compilation since it's quite necessary for any difficult
+stochastic example.
 
 ## Differential-Algebraic Equation (DAE) Examples
 
 A differential-algebraic equation is defined by an implicit function `f(du,u,p,t)=0`. All of the controls are the
 same as the other examples, except here you define a function which returns the residuals for each part of the equation
 to define the DAE. The initial value `u0` and the initial derivative `du0` are required, though they do not necessarily
-have to satisfy `f` (known as inconsistant initial conditions). The methods will automatically find consistant initial
+have to satisfy `f` (known as inconsistent initial conditions). The methods will automatically find consistent initial
 conditions. In order for this to occur, `differential_vars` must be set. This vector states which of the variables are
 differential (have a derivative term), with `false` meaning that the variable is purely algebraic.
 
@@ -364,15 +377,16 @@ f <- function (du,u,p,t) {
   resid3 = u[1] + u[2] + u[3] - 1.0
   c(resid1,resid2,resid3)
 }
-u0 = c(1.0, 0, 0)
-du0 = c(-0.04, 0.04, 0.0)
-tspan = list(0.0,100000.0)
-differential_vars = c(TRUE,TRUE,FALSE)
-sol = diffeqr::dae.solve(f,du0,u0,tspan,differential_vars=differential_vars)
-udf = as.data.frame(sol$u)
+u0 <- c(1.0, 0, 0)
+du0 <- c(-0.04, 0.04, 0.0)
+tspan <- c(0.0,100000.0)
+differential_vars <- c(TRUE,TRUE,FALSE)
+prob <- de$DAEProblem(f,du0,u0,tspan,differential_vars=differential_vars)
+sol <- de$solve(prob)
+udf <- as.data.frame(t(sapply(sol$u,identity)))
 plotly::plot_ly(udf, x = sol$t, y = ~V1, type = 'scatter', mode = 'lines') %>%
-plotly::add_trace(y = ~V2) %>%
-plotly::add_trace(y = ~V3)
+  plotly::add_trace(y = ~V2) %>%
+  plotly::add_trace(y = ~V3)
 ```
 
 Additionally, an in-place JIT compiled form for `f` can be used to enhance the speed:
@@ -383,7 +397,17 @@ f = JuliaCall::julia_eval("function f(out,du,u,p,t)
   out[2] = + 0.04u[1] - 3e7*u[2]^2 - 1e4*u[2]*u[3] - du[2]
   out[3] = u[1] + u[2] + u[3] - 1.0
 end")
-sol = diffeqr::dae.solve('f',du0,u0,tspan,differential_vars=differential_vars)
+u0 <- c(1.0, 0, 0)
+du0 <- c(-0.04, 0.04, 0.0)
+tspan <- c(0.0,100000.0)
+differential_vars <- c(TRUE,TRUE,FALSE)
+JuliaCall::julia_assign("du0", du0)
+JuliaCall::julia_assign("u0", u0)
+JuliaCall::julia_assign("p", p)
+JuliaCall::julia_assign("tspan", tspan)
+JuliaCall::julia_assign("differential_vars", differential_vars)
+prob = JuliaCall::julia_eval("DAEProblem(f, du0, u0, tspan, p, differential_vars=differential_vars)")
+sol = de$solve(prob)
 ```
 
 ![daes](https://user-images.githubusercontent.com/1814174/39022955-d600814c-43ec-11e8-91bb-e096ff3d3fb7.png)
@@ -401,18 +425,22 @@ was. This helps improve the solver accuracy by accurately stepping at the points
 this is:
 
 ```R
-f = JuliaCall::julia_eval("function f(du, u, h, p, t)
+f <- JuliaCall::julia_eval("function f(du, u, h, p, t)
   du[1] = 1.1/(1 + sqrt(10)*(h(p, t-20)[1])^(5/4)) - 10*u[1]/(1 + 40*u[2])
   du[2] = 100*u[1]/(1 + 40*u[2]) - 2.43*u[2]
 end")
-u0 = c(1.05767027/3, 1.030713491/3)
-h <- function (p,t){
-  c(1.05767027/3, 1.030713491/3)
-}
-tspan = list(0.0, 100.0)
-constant_lags = c(20.0)
-sol = diffeqr::dde.solve('f',u0,h,tspan,constant_lags=constant_lags)
-udf = as.data.frame(sol$u)
+h <- JuliaCall::julia_eval("function h(p, t)
+  [1.05767027/3, 1.030713491/3]
+end")
+u0 <- c(1.05767027/3, 1.030713491/3)
+tspan <- c(0.0, 100.0)
+constant_lags <- c(20.0)
+JuliaCall::julia_assign("u0", u0)
+JuliaCall::julia_assign("tspan", tspan)
+JuliaCall::julia_assign("constant_lags", tspan)
+prob <- JuliaCall::julia_eval("DDEProblem(f, u0, h, tspan, constant_lags = constant_lags)")
+sol <- de$solve(prob,de$MethodOfSteps(de$Tsit5()))
+udf <- as.data.frame(t(sapply(sol$u,identity)))
 plotly::plot_ly(udf, x = sol$t, y = ~V1, type = 'scatter', mode = 'lines') %>% plotly::add_trace(y = ~V2)
 ```
 

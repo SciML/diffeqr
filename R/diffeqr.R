@@ -42,9 +42,19 @@ diffeq_setup <- function (...){
 #' @examples
 #'
 #' \donttest{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
-#'
-#' diffeqr::diffeq_setup()
-#'
+#' de <- diffeqr::diffeq_setup()
+#' f <- function(u,p,t) {
+#'   du1 = p[1]*(u[2]-u[1])
+#'   du2 = u[1]*(p[2]-u[3]) - u[2]
+#'   du3 = u[1]*u[2] - p[3]*u[3]
+#'   return(c(du1,du2,du3))
+#' }
+#' u0 <- c(1.0,0.0,0.0)
+#' tspan <- c(0.0,100.0)
+#' p <- c(10.0,28.0,8/3)
+#' prob <- de$ODEProblem(f, u0, tspan, p)
+#' fastprob <- diffeqr::jitoptimize_ode(de,prob)
+#' sol <- de$solve(fastprob,de$Tsit5())
 #' }
 #'
 #' @export
@@ -56,6 +66,33 @@ jitoptimize_ode <- function (de,prob){
   JuliaCall::julia_assign("p", prob$p)
   JuliaCall::julia_assign("tspan", prob$tspan)
   new_prob <- JuliaCall::julia_eval("ODEProblem(jitf, u0, tspan, p)")
+}
+
+#' Jit Optimize an SDEProblem
+#'
+#' This function JIT Optimizes and SDEProblem utilizing the Julia ModelingToolkit
+#' and JIT compiler.
+#'
+#' @param de the current diffeqr environment
+#' @param prob an SDEProblem
+#'
+#' @examples
+#'
+#' \donttest{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
+#'
+#' diffeqr::diffeq_setup()
+#'
+#' }
+#'
+#' @export
+jitoptimize_sde <- function (de,prob){
+  sdesys = de$modelingtoolkitize(prob)
+  JuliaCall::julia_assign("sdesys", sdesys)
+  jul_f = JuliaCall::julia_eval("jitf = SDEFunction(sdesys,jac=true)")
+  JuliaCall::julia_assign("u0", prob$u0)
+  JuliaCall::julia_assign("p", prob$p)
+  JuliaCall::julia_assign("tspan", prob$tspan)
+  new_prob <- JuliaCall::julia_eval("SDEProblem(jitf, jitf.g, u0, tspan, p)")
 }
 
 julia_function <- function(func_name, pkg_name = "Main",
