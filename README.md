@@ -5,7 +5,7 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/2pxp5kfu0uiddmpl?svg=true)](https://ci.appveyor.com/project/ChrisRackauckas/diffeqr)
 
 diffeqr is a package for solving differential equations in R. It utilizes 
-[DifferentialEquations.jl](http://docs.juliadiffeq.org/latest/) for its core routines 
+[DifferentialEquations.jl](http://diffeq.sciml.ai/dev/) for its core routines 
 to give high performance solving of ordinary differential equations (ODEs),
 stochastic differential equations (SDEs), delay differential equations (DDEs), and
 differential-algebraic equations (DAEs) directly in R.
@@ -24,7 +24,7 @@ install.packages("diffeqr")
 To install the master branch of the package (for developers), use:
 
 ```R
-devtools::install_github('JuliaDiffEq/diffeqr', build_vignettes=T)
+devtools::install_github('SciML/diffeqr', build_vignettes=T)
 ```
 
 You will need a working installation of Julia in your path. To install Julia, download a generic binary
@@ -42,7 +42,7 @@ diffeqr::ode.solve(f,u0,tspan,[p,abstol,reltol,saveat])
 
 which solves the ODE `u' = f(u,p,t)` where `u(0)=u0` over the timespan `tspan`. 
 The common interface arguments are documented 
-[at the DifferentialEquations.jl page](http://docs.juliadiffeq.org/latest/basics/common_solver_opts.html).
+[at the DifferentialEquations.jl page](http://diffeq.sciml.ai/latest/basics/common_solver_opts.html).
 Notice that not all options are allowed, but the most common arguments are supported.
 
 ## Ordinary Differential Equation (ODE) Examples
@@ -153,8 +153,8 @@ plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'line
 ![precise_solution](https://user-images.githubusercontent.com/1814174/39012651-e03124e6-43c9-11e8-8496-bbee87987a37.png)
 
 We can also choose to use a different algorithm. The choice is done using a string that matches the Julia syntax. See
-[the ODE tutorial for details](http://docs.juliadiffeq.org/latest/tutorials/ode_example.html#Choosing-a-Solver-Algorithm-1).
-The list of choices for ODEs can be found at the [ODE Solvers page](http://docs.juliadiffeq.org/latest/solvers/ode_solve.html).
+[the ODE tutorial for details](http://diffeq.sciml.ai/dev/tutorials/ode_example.html#Choosing-a-Solver-Algorithm-1).
+The list of choices for ODEs can be found at the [ODE Solvers page](http://diffeq.sciml.ai/dev/solvers/ode_solve.html).
 For example, let's use a 9th order method due to Verner:
 
 ```R
@@ -262,7 +262,7 @@ udf = as.data.frame(sol$u)
 ### Systems of SDEs with Non-Diagonal Noise
 
 In many cases you may want to share noise terms across the system. This is known as non-diagonal noise. The 
-[DifferentialEquations.jl SDE Tutorial](http://docs.juliadiffeq.org/latest/tutorials/sde_example.html#Example-4:-Systems-of-SDEs-with-Non-Diagonal-Noise-1)
+[DifferentialEquations.jl SDE Tutorial](http://diffeq.sciml.ai/dev/tutorials/sde_example.html#Example-4:-Systems-of-SDEs-with-Non-Diagonal-Noise-1)
 explains how the matrix form of the diffusion term corresponds to the summation style of multiple Wiener processes. Essentially,
 the row corresponds to which system the term is applied to, and the column is which noise term. So `du[i,j]` is the amount of
 noise due to the `j`th Wiener process that's applied to `u[i]`. We solve the Lorenz system with correlated noise as follows:
