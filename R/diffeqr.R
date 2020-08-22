@@ -117,24 +117,6 @@ diffeqgpu_setup <- function (...){
   degpu <- julia_pkg_import("DiffEqGPU",functions)
 }
 
-#' Convert an array to Float32
-#'
-#' @param x the array to convert to Float32
-#'
-#' @examples
-#'
-#' \donttest{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
-#'
-#' convert_float32(x)
-#'
-#' }
-#'
-#' @export
-convert_float32 <- function (x){
-  JuliaCall::julia_assign("x", x)
-  out <- JuliaCall::julia_eval("convert.(Float32,x)")
-}
-
 julia_function <- function(func_name, pkg_name = "Main",
                            env = emptyenv()){
   fname <- paste0(pkg_name, ".", func_name)
