@@ -62,7 +62,7 @@ diffeq_setup <- function (...){
 jitoptimize_ode <- function (de,prob){
   odesys = de$modelingtoolkitize(prob)
   JuliaCall::julia_assign("odesys", odesys)
-  jul_f = JuliaCall::julia_eval("jitf = eval(ODEFunctionExpr{true}(odesys,jac=true))")
+  jul_f = JuliaCall::julia_eval("jitf = ODEFunction(odesys,jac=true)")
   JuliaCall::julia_assign("u0", prob$u0)
   JuliaCall::julia_assign("p", prob$p)
   JuliaCall::julia_assign("tspan", prob$tspan)

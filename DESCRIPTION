@@ -17,7 +17,7 @@ SystemRequirements: Julia (>= 1.5), DifferentialEquations.jl, ModelingToolkit.jl
 Imports:
   JuliaCall,
   stringr
-RoxygenNote: 6.1.1
+RoxygenNote: 7.1.1
 Suggests: testthat,
     knitr,
     rmarkdown
