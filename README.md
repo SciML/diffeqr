@@ -448,3 +448,213 @@ plotly::plot_ly(udf, x = sol$t, y = ~V1, type = 'scatter', mode = 'lines') %>% p
 
 Notice that the solver accurately is able to simulate the kink (discontinuity) at `t=20` due to the discontinuity
 of the derivative at the initial time point! This is why declaring discontinuities can enhance the solver accuracy.
+
+## GPU-Accelerated ODE Solving of Ensembles
+
+In many cases one is interested in solving the same ODE many times over many
+different initial conditions and parameters. In diffeqr parlance this is called
+an ensemble solve. diffeqr inherits the parallelism tools of the 
+[SciML ecosystem](https://sciml.ai/) that are used for things like
+[automated equation discovery and acceleration](https://arxiv.org/abs/2001.04385).
+Here we will demonstrate using these parallel tools to accelerate the solving
+of an ensemble.
+
+First, let's define the JIT-accelerated Lorenz equation like before:
+
+```R
+de <- diffeqr::diffeq_setup()
+lorenz <- function (u,p,t){
+  du1 = p[1]*(u[2]-u[1])
+  du2 = u[1]*(p[2]-u[3]) - u[2]
+  du3 = u[1]*u[2] - p[3]*u[3]
+  c(du1,du2,du3)
+}
+u0 <- c(1.0,1.0,1.0)
+tspan <- c(0.0,100.0)
+p <- c(10.0,28.0,8/3)
+prob <- de$ODEProblem(lorenz,u0,tspan,p)
+fastprob <- diffeqr::jitoptimize_ode(de,prob)
+```
+
+Now we use the `EnsembleProblem` as defined on the 
+[ensemble parallelism page of the documentation](https://diffeq.sciml.ai/stable/features/ensemble/):
+Let's build an ensemble by utilizing uniform random numbers to randomize the
+initial conditions and parameters:
+
+```R
+prob_func <- function (prob,i,rep){
+  de$remake(prob,u0=runif(3)*u0,p=runif(3)*p)
+}
+ensembleprob = de$EnsembleProblem(fastprob, prob_func = prob_func, safetycopy=FALSE)
+```
+
+Now we solve the ensemble in serial:
+
+```R
+sol = de$solve(ensembleprob,de$Tsit5(),de$EnsembleSerial(),trajectories=10000,saveat=0.01)
+```
+
+To add GPUs to the mix, we need to bring in [DiffEqGPU](https://github.com/SciML/DiffEqGPU.jl).
+The `diffeqr::diffeqgpu_setup()` helper function will install CUDA for you and
+bring all of the bindings into the returned object:
+
+```R
+degpu <- diffeqr::diffeqgpu_setup()
+```
+
+Now we simply use `EnsembleGPUArray()` to solve 10,000 ODEs on the GPU in parallel:
+
+```R
+sol <- de$solve(ensembleprob,de$Tsit5(),degpu$EnsembleGPUArray(),trajectories=10000,saveat=0.01)
+```
+
+### Benchmark
+
+To see how much of an effect the parallelism has, let's test this against R's
+deSolve package. This is exactly the same problem as the documentation example
+for deSolve, so let's copy that verbatim and then add a function to do the
+ensemble generation:
+
+```R
+library(deSolve)
+Lorenz <- function(t, state, parameters) {
+  with(as.list(c(state, parameters)), {
+    dX <-  a * X + Y * Z
+    dY <-  b * (Y - Z)
+    dZ <- -X * Y + c * Y - Z
+    list(c(dX, dY, dZ))
+  })
+}
+
+parameters <- c(a = -8/3, b = -10, c = 28)
+state      <- c(X = 1, Y = 1, Z = 1)
+times      <- seq(0, 100, by = 0.01)
+out <- ode(y = state, times = times, func = Lorenz, parms = parameters)
+
+lorenz_solve <- function (i){
+  state      <- c(X = runif(1), Y = runif(1), Z = runif(1))
+  parameters <- c(a = -8/3 * runif(1), b = -10 * runif(1), c = 28 * runif(1))
+  out <- ode(y = state, times = times, func = Lorenz, parms = parameters)
+}
+```
+
+Using `lapply` to generate the ensemble we get:
+
+```
+> system.time({ lapply(1:1000,lorenz_solve) })
+   user  system elapsed 
+ 225.81    0.46  226.63
+```
+
+Now let's see how the JIT-accelerated serial Julia version stacks up against that:
+
+```
+> system.time({ de$solve(ensembleprob,de$Tsit5(),de$EnsembleSerial(),trajectories=1000,saveat=0.01) })
+   user  system elapsed 
+   2.75    0.30    3.08 
+```
+
+Julia is already about 73x faster than the pure R solvers here! Now let's add
+GPU-acceleration to the mix:
+
+```
+> system.time({ de$solve(ensembleprob,de$Tsit5(),degpu$EnsembleGPUArray(),trajectories=1000,saveat=0.01) })
+   user  system elapsed 
+   1.33    1.57    2.93 
+```
+
+That's only around 2x faster. But the GPU acceleartion is made for massively
+parallel problems, so let's up the trajectories a bit. We will not use more
+trajectories from R because that would take too much computing power, so let's
+see what happens to the Julia serial and GPU at 10,000 trajectories:
+
+```
+> system.time({ de$solve(ensembleprob,de$Tsit5(),de$EnsembleSerial(),trajectories=10000,saveat=0.01) })
+   user  system elapsed 
+  35.02    4.19   39.25 
+```
+
+```
+> system.time({ de$solve(ensembleprob,de$Tsit5(),degpu$EnsembleGPUArray(),trajectories=10000,saveat=0.01) })
+   user  system elapsed 
+  12.03    3.57   15.60
+```
+
+To compare this to the pure Julia code:
+
+```julia
+using OrdinaryDiffEq, DiffEqGPU
+function lorenz(du,u,p,t)
+ @inbounds begin
+     du[1] = p[1]*(u[2]-u[1])
+     du[2] = u[1]*(p[2]-u[3]) - u[2]
+     du[3] = u[1]*u[2] - p[3]*u[3]
+ end
+ nothing
+end
+
+u0 = Float32[1.0;1.0;1.0]
+tspan = (0.0f0,100.0f0)
+p = [10.0f0,28.0f0,8/3f0]
+prob = ODEProblem(lorenz,u0,tspan,p)
+prob_func = (prob,i,repeat) -> remake(prob,u0=rand(Float32,3).*u0,p=rand(Float32,3).*p)
+monteprob = EnsembleProblem(prob, prob_func = prob_func, safetycopy=false)
+@time sol = solve(monteprob,Tsit5(),EnsembleGPUArray(),trajectories=10_000,saveat=0.01f0)
+
+# 9.444439 seconds (22.96 M allocations: 6.464 GiB, 44.53% gc time)
+```
+
+which is more than an order of magnitude faster for computing 10,000 trajectories,
+note that the major factors are that we cannot define 32-bit floating point values
+from R and the `prob_func` for generating the initial conditions and parameters
+is a major bottleneck since this function is written in R.
+
+To see how this scales in Julia, let's take it to insane heights. First, let's
+reduce the amount we're saving:
+
+```julia
+@time sol = solve(monteprob,Tsit5(),EnsembleGPUArray(),trajectories=10_000,saveat=1.0f0)
+# 0.801215 seconds (1.66 M allocations: 133.846 MiB)
+```
+
+This highlights that controlling memory pressure is key with GPU usage: you will
+get much better performance when requiring less saved points on the GPU.
+
+```julia
+@time sol = solve(monteprob,Tsit5(),EnsembleGPUArray(),trajectories=100_000,saveat=1.0f0)
+# 1.871536 seconds (6.66 M allocations: 919.521 MiB, 2.48% gc time)
+```
+
+compared to serial:
+
+```julia
+@time sol = solve(monteprob,Tsit5(),EnsembleSerial(),trajectories=100_000,saveat=1.0f0)
+# 22.136743 seconds (16.40 M allocations: 1.628 GiB, 42.98% gc time)
+```
+
+And now we start to see that scaling power! Let's solve 1 million trajectories:
+
+```julia
+@time sol = solve(monteprob,Tsit5(),EnsembleGPUArray(),trajectories=1_000_000,saveat=1.0f0)
+# 25.234710 seconds (56.53 M allocations: 8.579 GiB, 51.61% gc time)
+```
+
+For reference, let's look at deSolve with the change to only save that much:
+
+```R
+times      <- seq(0, 100, by = 1.0)
+lorenz_solve <- function (i){
+  state      <- c(X = runif(1), Y = runif(1), Z = runif(1))
+  parameters <- c(a = -8/3 * runif(1), b = -10 * runif(1), c = 28 * runif(1))
+  out <- ode(y = state, times = times, func = Lorenz, parms = parameters)
+}
+
+system.time({ lapply(1:1000,lorenz_solve) })
+```
+
+The GPU version is solving 1000x as many trajectories, 2x as fast! So conclusion,
+if you need the most speed, you may want to move to the Julia version to get the
+most out of your GPU due to Float32's, and when using GPUs make sure it's a problem
+with a relatively average or low memory pressure, and these methods will give
+orders of magnitude acceleration compared to what you might be used to.
+

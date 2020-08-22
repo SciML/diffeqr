@@ -28,6 +28,7 @@ diffeq_setup <- function (...){
   JuliaCall::autowrap("DiffEqBase.AbstractRODESolution", fields = c("t","u"))
   JuliaCall::autowrap("DiffEqBase.AbstractDDESolution", fields = c("t","u"))
   JuliaCall::autowrap("DiffEqBase.AbstractDAESolution", fields = c("t","u"))
+  JuliaCall::autowrap("DiffEqBase.EnsembleSolution", fields = c("t","u"))
   de
 }
 
@@ -61,7 +62,7 @@ diffeq_setup <- function (...){
 jitoptimize_ode <- function (de,prob){
   odesys = de$modelingtoolkitize(prob)
   JuliaCall::julia_assign("odesys", odesys)
-  jul_f = JuliaCall::julia_eval("jitf = ODEFunction(odesys,jac=true)")
+  jul_f = JuliaCall::julia_eval("jitf = eval(ODEFunctionExpr{true}(odesys,jac=true))")
   JuliaCall::julia_assign("u0", prob$u0)
   JuliaCall::julia_assign("p", prob$p)
   JuliaCall::julia_assign("tspan", prob$tspan)
@@ -93,6 +94,45 @@ jitoptimize_sde <- function (de,prob){
   JuliaCall::julia_assign("p", prob$p)
   JuliaCall::julia_assign("tspan", prob$tspan)
   new_prob <- JuliaCall::julia_eval("SDEProblem(jitf, jitf.g, u0, tspan, p)")
+}
+
+#' Setup DiffEqGPU
+#'
+#' This function initializes the DiffEqGPU package for GPU-parallelized ensembles.
+#' The first time will be long since it includes precompilation.
+#'
+#' @examples
+#'
+#' \donttest{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
+#'
+#' degpu <- diffeqr::diffeqgpu_setup()
+#'
+#' }
+#'
+#' @export
+diffeqgpu_setup <- function (...){
+  JuliaCall::julia_install_package_if_needed("DiffEqGPU")
+  JuliaCall::julia_library("DiffEqGPU")
+  functions <- JuliaCall::julia_eval("filter(isascii, replace.(string.(propertynames(DiffEqGPU)),\"!\"=>\"_bang\"))")
+  degpu <- julia_pkg_import("DiffEqGPU",functions)
+}
+
+#' Convert an array to Float32
+#'
+#' @param x the array to convert to Float32
+#'
+#' @examples
+#'
+#' \donttest{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
+#'
+#' convert_float32(x)
+#'
+#' }
+#'
+#' @export
+convert_float32 <- function (x){
+  JuliaCall::julia_assign("x", x)
+  out <- JuliaCall::julia_eval("convert.(Float32,x)")
 }
 
 julia_function <- function(func_name, pkg_name = "Main",
