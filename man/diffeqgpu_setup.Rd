@@ -4,7 +4,7 @@
 \alias{diffeqgpu_setup}
 \title{Setup DiffEqGPU}
 \usage{
-diffeqgpu_setup(...)
+diffeqgpu_setup()
 }
 \description{
 This function initializes the DiffEqGPU package for GPU-parallelized ensembles.
