@@ -2,7 +2,6 @@
 
 [![Join the chat at https://gitter.im/JuliaDiffEq/Lobby](https://badges.gitter.im/JuliaDiffEq/Lobby.svg)](https://gitter.im/JuliaDiffEq/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Build Status](https://travis-ci.com/SciML/diffeqr.svg?branch=master)](https://travis-ci.com/SciML/diffeqr)
-[![Build status](https://ci.appveyor.com/api/projects/status/2pxp5kfu0uiddmpl?svg=true)](https://ci.appveyor.com/project/ChrisRackauckas/diffeqr)
 
 diffeqr is a package for solving differential equations in R. It utilizes 
 [DifferentialEquations.jl](http://diffeq.sciml.ai/dev/) for its core routines 
