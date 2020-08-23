@@ -1,3 +1,8 @@
+## Release v1.0.0
+
+Full recreation of the package. This provides a new simplified interface over
+DifferentialEquations.jl that matches the Julia interface almost 1-1.
+
 ## Release v0.1.1
 
 This is a quick patch to fix the vignettes of the v0.1.0 release.

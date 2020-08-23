@@ -33,17 +33,12 @@ installation of DifferentialEquations.jl will happen on the first invocation of 
 
 ## Usage
 
-diffeqr does not provide the full functionality of DifferentialEquations.jl. Instead, it supplies simplified
-direct solving routines with an R interface. The most basic function is:
+diffeqr provides a direct wrapper over [DifferentialEquations.jl](diffeq.sciml.ai). 
+The namespace is setup so that the standard syntax of Julia translates directly
+over to the R environment. There are two things to keep in mind:
 
-```R
-diffeqr::ode.solve(f,u0,tspan,[p,abstol,reltol,saveat])
-```
-
-which solves the ODE `u' = f(u,p,t)` where `u(0)=u0` over the timespan `tspan`. 
-The common interface arguments are documented 
-[at the DifferentialEquations.jl page](http://diffeq.sciml.ai/latest/basics/common_solver_opts.html).
-Notice that not all options are allowed, but the most common arguments are supported.
+1. All DifferentialEquations.jl commands are prefaced by `de$`
+2. All commands with a `!` are replaced with `_bang`, for example `solve!` becomes `solve_bang`.
 
 ## Ordinary Differential Equation (ODE) Examples
 
@@ -52,7 +47,7 @@ Notice that not all options are allowed, but the most common arguments are suppo
 Let's solve the linear ODE `u'=1.01u`. First setup the package:
 
 ```R
-diffeqr::diffeq_setup()
+de <- diffeqr::diffeq_setup()
 ```
 
 Define the derivative function `f(u,p,t)`. 
@@ -66,18 +61,27 @@ f <- function(u,p,t) {
 Then we give it an initial condition and a time span to solve over:
 
 ```R
-u0 = 1/2
-tspan <- list(0.0,1.0)
+u0 <- 1/2
+tspan <- c(0., 1.)
 ```
 
-With those pieces we call `diffeqr::ode.solve` to solve the ODE:
+With those pieces we define the `ODEProblem` and `solve` the ODE:
 
 ```R
-sol = diffeqr::ode.solve(f,u0,tspan)
+prob = de$ODEProblem(f, u0, tspan)
+sol = de$solve(prob)
 ```
 
 This gives back a solution object for which `sol$t` are the time points
-and `sol$u` are the values. We can check it by plotting the solution:
+and `sol$u` are the values. We can treat the solution as a continuous object
+in time via 
+
+```R
+sol$.(0.2)
+```
+
+and a high order interpolation will compute the value at `t=0.2`. We can check 
+the solution by plotting it:
 
 ```R 
 plot(sol$t,sol$u,"l")
@@ -102,16 +106,27 @@ f <- function(u,p,t) {
 Here we utilized the parameter array `p`. Thus we use `diffeqr::ode.solve` like before, but also pass in parameters this time:
 
 ```R
-u0 = c(1.0,0.0,0.0)
+u0 <- c(1.0,0.0,0.0)
 tspan <- list(0.0,100.0)
-p = c(10.0,28.0,8/3)
-sol = diffeqr::ode.solve(f,u0,tspan,p=p)
+p <- c(10.0,28.0,8/3)
+prob <- de$ODEProblem(f, u0, tspan, p)
+sol <- de$solve(prob)
 ```
 
-The returned solution is like before. It is convenient to turn it into a data.frame:
+The returned solution is like before except now `sol$u` is an array of arrays,
+where `sol$u[i]` is the full system at time `sol$t[i]`. It can be convenient to
+turn this into an R matrix through `sapply`:
 
 ```R
-udf = as.data.frame(sol$u)
+mat <- sapply(sol$u,identity)
+```
+
+This has each row as a time series. `t(mat)` makes each column a time series.
+It is sometimes convenient to turn the output into a `data.frame` which is done
+via:
+
+```R
+udf <- as.data.frame(t(mat))
 ```
 
 Now we can use `matplot` to plot the timeseries together:
@@ -142,11 +157,11 @@ In addition, we may want to choose to save at more time points. We do this by gi
 Together, this looks like:
 
 ```R
-abstol = 1e-8
-reltol = 1e-8
-saveat = 0:10000/100
-sol = diffeqr::ode.solve(f,u0,tspan,p=p,abstol=abstol,reltol=reltol,saveat=saveat)
-udf = as.data.frame(sol$u)
+abstol <- 1e-8
+reltol <- 1e-8
+saveat <- 0:10000/100
+sol <- de$solve(prob,abstol=abstol,reltol=reltol,saveat=saveat)
+udf <- as.data.frame(t(sapply(sol$u,identity)))
 plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
 ```
 
@@ -158,35 +173,71 @@ The list of choices for ODEs can be found at the [ODE Solvers page](http://diffe
 For example, let's use a 9th order method due to Verner:
 
 ```R
-sol = diffeqr::ode.solve(f,u0,tspan,alg="Vern9()",p=p,abstol=abstol,reltol=reltol,saveat=saveat)
+sol <- de$solve(prob,de$Vern9(),abstol=abstol,reltol=reltol,saveat=saveat)
 ```
 
 Note that each algorithm choice will cause a JIT compilation.
 
 ## Performance Enhancements
 
-One way to enhance the performance of your code is to define the function in Julia so that way it is JIT compiled. diffeqr is
-built using [the JuliaCall package](https://github.com/Non-Contradiction/JuliaCall), and so you can utilize this same interface
-to define a function directly in Julia:
+One way to enhance the performance of your code is to define the function in Julia 
+so that way it is JIT compiled. diffeqr is built using 
+[the JuliaCall package](https://github.com/Non-Contradiction/JuliaCall), and so 
+you can utilize the Julia JIT compiler. We expose this automatically over ODE
+functions via `jitoptimize_ode`, like in the following example:
 
 ```R
-f <- JuliaCall::julia_eval("
-function f(du,u,p,t)
+f <- function(u,p,t) {
+  du1 = p[1]*(u[2]-u[1])
+  du2 = u[1]*(p[2]-u[3]) - u[2]
+  du3 = u[1]*u[2] - p[3]*u[3]
+  return(c(du1,du2,du3))
+}
+u0 <- c(1.0,0.0,0.0)
+tspan <- c(0.0,100.0)
+p <- c(10.0,28.0,8/3)
+prob <- de$ODEProblem(f, u0, tspan, p)
+fastprob <- diffeqr::jitoptimize_ode(de,prob)
+sol <- de$solve(fastprob,de$Tsit5())
+```
+
+Note that the first evaluation of the function will have an ~2 second lag since 
+the compiler will run, and all subsequent runs will be orders of magnitude faster
+than the pure R function. This means it's great for expensive functions (ex. large
+PDEs) or functions called repeatedly, like during optimization of parameters.
+
+We can also use the JuliaCall functions to directly define the function in Julia
+to eliminate the R interpreter overhead and get full JIT compilation:
+
+```R
+julf <- JuliaCall::julia_eval("
+function julf(du,u,p,t)
   du[1] = 10.0*(u[2]-u[1])
   du[2] = u[1]*(28.0-u[3]) - u[2]
   du[3] = u[1]*u[2] - (8/3)*u[3]
 end")
+JuliaCall::julia_assign("u0", u0)
+JuliaCall::julia_assign("p", p)
+JuliaCall::julia_assign("tspan", tspan)
+prob3 = JuliaCall::julia_eval("ODEProblem(julf, u0, tspan, p)")
+sol = de$solve(prob3,de$Tsit5())
 ```
 
-We can then use this in our ODE function by telling it to use the Julia-defined function called `f`:
+To demonstrate the performance advantage, let's time them all:
 
 ```R
-u0 = c(1.0,0.0,0.0)
-tspan <- list(0.0,100.0)
-sol = diffeqr::ode.solve('f',u0,tspan)
+> system.time({ for (i in 1:100){ de$solve(prob    ,de$Tsit5()) }})
+   user  system elapsed 
+   6.69    0.06    6.78 
+> system.time({ for (i in 1:100){ de$solve(fastprob,de$Tsit5()) }})
+   user  system elapsed 
+   0.11    0.03    0.14 
+> system.time({ for (i in 1:100){ de$solve(prob3   ,de$Tsit5()) }})
+   user  system elapsed 
+   0.14    0.02    0.15 
 ```
 
-This will help a lot if you are solving difficult equations (ex. large PDEs) or repeat solving (ex. parameter estimation).
+This is about a 50x improvement!
 
 ## Stochastic Differential Equation (SDE) Examples
 
@@ -196,15 +247,18 @@ Solving stochastic differential equations (SDEs) is the similar to ODEs. To solv
 two functions: `f` and `g`, where `du = f(u,t)dt + g(u,t)dW_t`
 
 ```r
+de <- diffeqr::diffeq_setup()
 f <- function(u,p,t) {
   return(1.01*u)
 }
 g <- function(u,p,t) {
   return(0.87*u)
 }
-u0 = 1/2
+u0 <- 1/2
 tspan <- list(0.0,1.0)
-sol = diffeqr::sde.solve(f,g,u0,tspan)
+prob <- de$SDEProblem(f,g,u0,tspan)
+sol <- de$solve(prob)
+udf <- as.data.frame(t(sapply(sol$u,identity)))
 plotly::plot_ly(udf, x = sol$t, y = sol$u, type = 'scatter', mode = 'lines')
 ```
 
@@ -226,38 +280,41 @@ f <- function(u,p,t) {
 g <- function(u,p,t) {
   return(c(0.3*u[1],0.3*u[2],0.3*u[3]))
 }
-u0 = c(1.0,0.0,0.0)
-tspan <- list(0.0,1.0)
-p = c(10.0,28.0,8/3)
-sol = diffeqr::sde.solve(f,g,u0,tspan,p=p,saveat=0.005)
-udf = as.data.frame(sol$u)
-plotly::plot_ly(x = sol$t, y = sol$u, type = 'scatter', mode = 'lines')
+u0 <- c(1.0,0.0,0.0)
+tspan <- c(0.0,1.0)
+p <- c(10.0,28.0,8/3)
+prob <- de$SDEProblem(f,g,u0,tspan,p)
+sol <- de$solve(prob,saveat=0.005)
+udf <- as.data.frame(t(sapply(sol$u,identity)))
+plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
 ```
 
 Using a JIT compiled function for the drift and diffusion functions can greatly enhance the speed here.
 With the speed increase we can comfortably solve over long time spans:
 
 ```R
-f <- JuliaCall::julia_eval("
-function f(du,u,p,t)
-  du[1] = 10.0*(u[2]-u[1])
-  du[2] = u[1]*(28.0-u[3]) - u[2]
-  du[3] = u[1]*u[2] - (8/3)*u[3]
-end")
-
-g <- JuliaCall::julia_eval("
-function g(du,u,p,t)
-  du[1] = 0.3*u[1]
-  du[2] = 0.3*u[2]
-  du[3] = 0.3*u[3]
-end")
-tspan <- list(0.0,100.0)
-sol = diffeqr::sde.solve('f','g',u0,tspan,p=p,saveat=0.05)
-udf = as.data.frame(sol$u)
-#plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
+tspan <- c(0.0,100.0)
+prob <- de$SDEProblem(f,g,u0,tspan,p)
+fastprob <- diffeqr::jitoptimize_sde(de,prob)
+sol <- de$solve(fastprob,saveat=0.005)
+udf <- as.data.frame(t(sapply(sol$u,identity)))
+plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
 ```
 
 ![stochastic_lorenz](https://user-images.githubusercontent.com/1814174/39019723-216c3210-43df-11e8-82c0-2e676f53e235.png)
+
+Let's see how much faster the JIT-compiled version was:
+
+```R
+> system.time({ for (i in 1:5){ de$solve(prob    ) }})
+   user  system elapsed 
+ 146.40    0.75  147.22 
+> system.time({ for (i in 1:5){ de$solve(fastprob) }})
+   user  system elapsed 
+   1.07    0.10    1.17
+```
+
+Holy Monster's Inc. that's about 145x faster.
 
 ### Systems of SDEs with Non-Diagonal Noise
 
@@ -283,24 +340,31 @@ function g(du,u,p,t)
   du[2,2] = 0.2u[2]
   du[3,2] = 0.3u[2]
 end")
-u0 = c(1.0,0.0,0.0)
-tspan <- list(0.0,100.0)
-noise.dims = list(3,2)
-sol = diffeqr::sde.solve('f','g',u0,tspan,saveat=0.005,noise.dims=noise.dims)
-udf = as.data.frame(sol$u)
+u0 <- c(1.0,0.0,0.0)
+tspan <- c(0.0,100.0)
+noise_rate_prototype <- matrix(c(0.0,0.0,0.0,0.0,0.0,0.0), nrow = 3, ncol = 2)
+
+JuliaCall::julia_assign("u0", u0)
+JuliaCall::julia_assign("tspan", tspan)
+JuliaCall::julia_assign("noise_rate_prototype", noise_rate_prototype)
+prob <- JuliaCall::julia_eval("SDEProblem(f, g, u0, tspan, p, noise_rate_prototype=noise_rate_prototype)")
+sol <- de$solve(prob)
+udf <- as.data.frame(t(sapply(sol$u,identity)))
 plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'lines')
 ```
 
 ![noise_corr](https://user-images.githubusercontent.com/1814174/39022036-8958319a-43e8-11e8-849b-c21bcb2ec21e.png)
 
 Here you can see that the warping effect of the noise correlations is quite visible!
+Note that we applied JIT compilation since it's quite necessary for any difficult
+stochastic example.
 
 ## Differential-Algebraic Equation (DAE) Examples
 
 A differential-algebraic equation is defined by an implicit function `f(du,u,p,t)=0`. All of the controls are the
 same as the other examples, except here you define a function which returns the residuals for each part of the equation
 to define the DAE. The initial value `u0` and the initial derivative `du0` are required, though they do not necessarily
-have to satisfy `f` (known as inconsistant initial conditions). The methods will automatically find consistant initial
+have to satisfy `f` (known as inconsistent initial conditions). The methods will automatically find consistent initial
 conditions. In order for this to occur, `differential_vars` must be set. This vector states which of the variables are
 differential (have a derivative term), with `false` meaning that the variable is purely algebraic.
 
@@ -313,15 +377,16 @@ f <- function (du,u,p,t) {
   resid3 = u[1] + u[2] + u[3] - 1.0
   c(resid1,resid2,resid3)
 }
-u0 = c(1.0, 0, 0)
-du0 = c(-0.04, 0.04, 0.0)
-tspan = list(0.0,100000.0)
-differential_vars = c(TRUE,TRUE,FALSE)
-sol = diffeqr::dae.solve(f,du0,u0,tspan,differential_vars=differential_vars)
-udf = as.data.frame(sol$u)
+u0 <- c(1.0, 0, 0)
+du0 <- c(-0.04, 0.04, 0.0)
+tspan <- c(0.0,100000.0)
+differential_vars <- c(TRUE,TRUE,FALSE)
+prob <- de$DAEProblem(f,du0,u0,tspan,differential_vars=differential_vars)
+sol <- de$solve(prob)
+udf <- as.data.frame(t(sapply(sol$u,identity)))
 plotly::plot_ly(udf, x = sol$t, y = ~V1, type = 'scatter', mode = 'lines') %>%
-plotly::add_trace(y = ~V2) %>%
-plotly::add_trace(y = ~V3)
+  plotly::add_trace(y = ~V2) %>%
+  plotly::add_trace(y = ~V3)
 ```
 
 Additionally, an in-place JIT compiled form for `f` can be used to enhance the speed:
@@ -332,7 +397,17 @@ f = JuliaCall::julia_eval("function f(out,du,u,p,t)
   out[2] = + 0.04u[1] - 3e7*u[2]^2 - 1e4*u[2]*u[3] - du[2]
   out[3] = u[1] + u[2] + u[3] - 1.0
 end")
-sol = diffeqr::dae.solve('f',du0,u0,tspan,differential_vars=differential_vars)
+u0 <- c(1.0, 0, 0)
+du0 <- c(-0.04, 0.04, 0.0)
+tspan <- c(0.0,100000.0)
+differential_vars <- c(TRUE,TRUE,FALSE)
+JuliaCall::julia_assign("du0", du0)
+JuliaCall::julia_assign("u0", u0)
+JuliaCall::julia_assign("p", p)
+JuliaCall::julia_assign("tspan", tspan)
+JuliaCall::julia_assign("differential_vars", differential_vars)
+prob = JuliaCall::julia_eval("DAEProblem(f, du0, u0, tspan, p, differential_vars=differential_vars)")
+sol = de$solve(prob)
 ```
 
 ![daes](https://user-images.githubusercontent.com/1814174/39022955-d600814c-43ec-11e8-91bb-e096ff3d3fb7.png)
@@ -350,18 +425,22 @@ was. This helps improve the solver accuracy by accurately stepping at the points
 this is:
 
 ```R
-f = JuliaCall::julia_eval("function f(du, u, h, p, t)
+f <- JuliaCall::julia_eval("function f(du, u, h, p, t)
   du[1] = 1.1/(1 + sqrt(10)*(h(p, t-20)[1])^(5/4)) - 10*u[1]/(1 + 40*u[2])
   du[2] = 100*u[1]/(1 + 40*u[2]) - 2.43*u[2]
 end")
-u0 = c(1.05767027/3, 1.030713491/3)
-h <- function (p,t){
-  c(1.05767027/3, 1.030713491/3)
-}
-tspan = list(0.0, 100.0)
-constant_lags = c(20.0)
-sol = diffeqr::dde.solve('f',u0,h,tspan,constant_lags=constant_lags)
-udf = as.data.frame(sol$u)
+h <- JuliaCall::julia_eval("function h(p, t)
+  [1.05767027/3, 1.030713491/3]
+end")
+u0 <- c(1.05767027/3, 1.030713491/3)
+tspan <- c(0.0, 100.0)
+constant_lags <- c(20.0)
+JuliaCall::julia_assign("u0", u0)
+JuliaCall::julia_assign("tspan", tspan)
+JuliaCall::julia_assign("constant_lags", tspan)
+prob <- JuliaCall::julia_eval("DDEProblem(f, u0, h, tspan, constant_lags = constant_lags)")
+sol <- de$solve(prob,de$MethodOfSteps(de$Tsit5()))
+udf <- as.data.frame(t(sapply(sol$u,identity)))
 plotly::plot_ly(udf, x = sol$t, y = ~V1, type = 'scatter', mode = 'lines') %>% plotly::add_trace(y = ~V2)
 ```
 
@@ -369,3 +448,213 @@ plotly::plot_ly(udf, x = sol$t, y = ~V1, type = 'scatter', mode = 'lines') %>% p
 
 Notice that the solver accurately is able to simulate the kink (discontinuity) at `t=20` due to the discontinuity
 of the derivative at the initial time point! This is why declaring discontinuities can enhance the solver accuracy.
+
+## GPU-Accelerated ODE Solving of Ensembles
+
+In many cases one is interested in solving the same ODE many times over many
+different initial conditions and parameters. In diffeqr parlance this is called
+an ensemble solve. diffeqr inherits the parallelism tools of the 
+[SciML ecosystem](https://sciml.ai/) that are used for things like
+[automated equation discovery and acceleration](https://arxiv.org/abs/2001.04385).
+Here we will demonstrate using these parallel tools to accelerate the solving
+of an ensemble.
+
+First, let's define the JIT-accelerated Lorenz equation like before:
+
+```R
+de <- diffeqr::diffeq_setup()
+lorenz <- function (u,p,t){
+  du1 = p[1]*(u[2]-u[1])
+  du2 = u[1]*(p[2]-u[3]) - u[2]
+  du3 = u[1]*u[2] - p[3]*u[3]
+  c(du1,du2,du3)
+}
+u0 <- c(1.0,1.0,1.0)
+tspan <- c(0.0,100.0)
+p <- c(10.0,28.0,8/3)
+prob <- de$ODEProblem(lorenz,u0,tspan,p)
+fastprob <- diffeqr::jitoptimize_ode(de,prob)
+```
+
+Now we use the `EnsembleProblem` as defined on the 
+[ensemble parallelism page of the documentation](https://diffeq.sciml.ai/stable/features/ensemble/):
+Let's build an ensemble by utilizing uniform random numbers to randomize the
+initial conditions and parameters:
+
+```R
+prob_func <- function (prob,i,rep){
+  de$remake(prob,u0=runif(3)*u0,p=runif(3)*p)
+}
+ensembleprob = de$EnsembleProblem(fastprob, prob_func = prob_func, safetycopy=FALSE)
+```
+
+Now we solve the ensemble in serial:
+
+```R
+sol = de$solve(ensembleprob,de$Tsit5(),de$EnsembleSerial(),trajectories=10000,saveat=0.01)
+```
+
+To add GPUs to the mix, we need to bring in [DiffEqGPU](https://github.com/SciML/DiffEqGPU.jl).
+The `diffeqr::diffeqgpu_setup()` helper function will install CUDA for you and
+bring all of the bindings into the returned object:
+
+```R
+degpu <- diffeqr::diffeqgpu_setup()
+```
+
+Now we simply use `EnsembleGPUArray()` to solve 10,000 ODEs on the GPU in parallel:
+
+```R
+sol <- de$solve(ensembleprob,de$Tsit5(),degpu$EnsembleGPUArray(),trajectories=10000,saveat=0.01)
+```
+
+### Benchmark
+
+To see how much of an effect the parallelism has, let's test this against R's
+deSolve package. This is exactly the same problem as the documentation example
+for deSolve, so let's copy that verbatim and then add a function to do the
+ensemble generation:
+
+```R
+library(deSolve)
+Lorenz <- function(t, state, parameters) {
+  with(as.list(c(state, parameters)), {
+    dX <-  a * X + Y * Z
+    dY <-  b * (Y - Z)
+    dZ <- -X * Y + c * Y - Z
+    list(c(dX, dY, dZ))
+  })
+}
+
+parameters <- c(a = -8/3, b = -10, c = 28)
+state      <- c(X = 1, Y = 1, Z = 1)
+times      <- seq(0, 100, by = 0.01)
+out <- ode(y = state, times = times, func = Lorenz, parms = parameters)
+
+lorenz_solve <- function (i){
+  state      <- c(X = runif(1), Y = runif(1), Z = runif(1))
+  parameters <- c(a = -8/3 * runif(1), b = -10 * runif(1), c = 28 * runif(1))
+  out <- ode(y = state, times = times, func = Lorenz, parms = parameters)
+}
+```
+
+Using `lapply` to generate the ensemble we get:
+
+```
+> system.time({ lapply(1:1000,lorenz_solve) })
+   user  system elapsed 
+ 225.81    0.46  226.63
+```
+
+Now let's see how the JIT-accelerated serial Julia version stacks up against that:
+
+```
+> system.time({ de$solve(ensembleprob,de$Tsit5(),de$EnsembleSerial(),trajectories=1000,saveat=0.01) })
+   user  system elapsed 
+   2.75    0.30    3.08 
+```
+
+Julia is already about 73x faster than the pure R solvers here! Now let's add
+GPU-acceleration to the mix:
+
+```
+> system.time({ de$solve(ensembleprob,de$Tsit5(),degpu$EnsembleGPUArray(),trajectories=1000,saveat=0.01) })
+   user  system elapsed 
+   1.33    1.57    2.93 
+```
+
+That's only around 2x faster. But the GPU acceleartion is made for massively
+parallel problems, so let's up the trajectories a bit. We will not use more
+trajectories from R because that would take too much computing power, so let's
+see what happens to the Julia serial and GPU at 10,000 trajectories:
+
+```
+> system.time({ de$solve(ensembleprob,de$Tsit5(),de$EnsembleSerial(),trajectories=10000,saveat=0.01) })
+   user  system elapsed 
+  35.02    4.19   39.25 
+```
+
+```
+> system.time({ de$solve(ensembleprob,de$Tsit5(),degpu$EnsembleGPUArray(),trajectories=10000,saveat=0.01) })
+   user  system elapsed 
+  12.03    3.57   15.60
+```
+
+To compare this to the pure Julia code:
+
+```julia
+using OrdinaryDiffEq, DiffEqGPU
+function lorenz(du,u,p,t)
+ @inbounds begin
+     du[1] = p[1]*(u[2]-u[1])
+     du[2] = u[1]*(p[2]-u[3]) - u[2]
+     du[3] = u[1]*u[2] - p[3]*u[3]
+ end
+ nothing
+end
+
+u0 = Float32[1.0;1.0;1.0]
+tspan = (0.0f0,100.0f0)
+p = [10.0f0,28.0f0,8/3f0]
+prob = ODEProblem(lorenz,u0,tspan,p)
+prob_func = (prob,i,repeat) -> remake(prob,u0=rand(Float32,3).*u0,p=rand(Float32,3).*p)
+monteprob = EnsembleProblem(prob, prob_func = prob_func, safetycopy=false)
+@time sol = solve(monteprob,Tsit5(),EnsembleGPUArray(),trajectories=10_000,saveat=0.01f0)
+
+# 9.444439 seconds (22.96 M allocations: 6.464 GiB, 44.53% gc time)
+```
+
+which is more than an order of magnitude faster for computing 10,000 trajectories,
+note that the major factors are that we cannot define 32-bit floating point values
+from R and the `prob_func` for generating the initial conditions and parameters
+is a major bottleneck since this function is written in R.
+
+To see how this scales in Julia, let's take it to insane heights. First, let's
+reduce the amount we're saving:
+
+```julia
+@time sol = solve(monteprob,Tsit5(),EnsembleGPUArray(),trajectories=10_000,saveat=1.0f0)
+# 0.801215 seconds (1.66 M allocations: 133.846 MiB)
+```
+
+This highlights that controlling memory pressure is key with GPU usage: you will
+get much better performance when requiring less saved points on the GPU.
+
+```julia
+@time sol = solve(monteprob,Tsit5(),EnsembleGPUArray(),trajectories=100_000,saveat=1.0f0)
+# 1.871536 seconds (6.66 M allocations: 919.521 MiB, 2.48% gc time)
+```
+
+compared to serial:
+
+```julia
+@time sol = solve(monteprob,Tsit5(),EnsembleSerial(),trajectories=100_000,saveat=1.0f0)
+# 22.136743 seconds (16.40 M allocations: 1.628 GiB, 42.98% gc time)
+```
+
+And now we start to see that scaling power! Let's solve 1 million trajectories:
+
+```julia
+@time sol = solve(monteprob,Tsit5(),EnsembleGPUArray(),trajectories=1_000_000,saveat=1.0f0)
+# 25.234710 seconds (56.53 M allocations: 8.579 GiB, 51.61% gc time)
+```
+
+For reference, let's look at deSolve with the change to only save that much:
+
+```R
+times      <- seq(0, 100, by = 1.0)
+lorenz_solve <- function (i){
+  state      <- c(X = runif(1), Y = runif(1), Z = runif(1))
+  parameters <- c(a = -8/3 * runif(1), b = -10 * runif(1), c = 28 * runif(1))
+  out <- ode(y = state, times = times, func = Lorenz, parms = parameters)
+}
+
+system.time({ lapply(1:1000,lorenz_solve) })
+```
+
+The GPU version is solving 1000x as many trajectories, 2x as fast! So conclusion,
+if you need the most speed, you may want to move to the Julia version to get the
+most out of your GPU due to Float32's, and when using GPUs make sure it's a problem
+with a relatively average or low memory pressure, and these methods will give
+orders of magnitude acceleration compared to what you might be used to.
+
