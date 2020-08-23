@@ -110,7 +110,7 @@ jitoptimize_sde <- function (de,prob){
 #' }
 #'
 #' @export
-diffeqgpu_setup <- function (...){
+diffeqgpu_setup <- function (){
   JuliaCall::julia_install_package_if_needed("DiffEqGPU")
   JuliaCall::julia_library("DiffEqGPU")
   functions <- JuliaCall::julia_eval("filter(isascii, replace.(string.(propertynames(DiffEqGPU)),\"!\"=>\"_bang\"))")
