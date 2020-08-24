@@ -3,14 +3,14 @@
 [![Join the chat at https://gitter.im/JuliaDiffEq/Lobby](https://badges.gitter.im/JuliaDiffEq/Lobby.svg)](https://gitter.im/JuliaDiffEq/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Build Status](https://travis-ci.com/SciML/diffeqr.svg?branch=master)](https://travis-ci.com/SciML/diffeqr)
 
-diffeqr is a package for solving differential equations in R. It utilizes 
-[DifferentialEquations.jl](https://diffeq.sciml.ai/dev/) for its core routines 
+diffeqr is a package for solving differential equations in R. It utilizes
+[DifferentialEquations.jl](https://diffeq.sciml.ai/dev/) for its core routines
 to give high performance solving of ordinary differential equations (ODEs),
 stochastic differential equations (SDEs), delay differential equations (DDEs), and
 differential-algebraic equations (DAEs) directly in R.
 
 If you have any questions, or just want to chat about solvers/using the package,
-please feel free to chat in the [Gitter channel](https://gitter.im/JuliaDiffEq/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge). For bug reports, feature requests, etc., please submit an issue. 
+please feel free to chat in the [Gitter channel](https://gitter.im/JuliaDiffEq/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge). For bug reports, feature requests, etc., please submit an issue.
 
 ## Installation
 
@@ -32,7 +32,7 @@ installation of DifferentialEquations.jl will happen on the first invocation of 
 
 ## Usage
 
-diffeqr provides a direct wrapper over [DifferentialEquations.jl](diffeq.sciml.ai). 
+diffeqr provides a direct wrapper over [DifferentialEquations.jl](diffeq.sciml.ai).
 The namespace is setup so that the standard syntax of Julia translates directly
 over to the R environment. There are two things to keep in mind:
 
@@ -49,7 +49,7 @@ Let's solve the linear ODE `u'=1.01u`. First setup the package:
 de <- diffeqr::diffeq_setup()
 ```
 
-Define the derivative function `f(u,p,t)`. 
+Define the derivative function `f(u,p,t)`.
 
 ```R
 f <- function(u,p,t) {
@@ -73,16 +73,16 @@ sol = de$solve(prob)
 
 This gives back a solution object for which `sol$t` are the time points
 and `sol$u` are the values. We can treat the solution as a continuous object
-in time via 
+in time via
 
 ```R
 sol$.(0.2)
 ```
 
-and a high order interpolation will compute the value at `t=0.2`. We can check 
+and a high order interpolation will compute the value at `t=0.2`. We can check
 the solution by plotting it:
 
-```R 
+```R
 plot(sol$t,sol$u,"l")
 ```
 
@@ -150,7 +150,7 @@ Plotly is much prettier!
 
 If we want to have a more accurate solution, we can send `abstol` and `reltol`. Defaults are `1e-6` and `1e-3` respectively.
 Generally you can think of the digits of accuracy as related to 1 plus the exponent of the relative tolerance, so the default is
-two digits of accuracy. Absolute tolernace is the accuracy near 0. 
+two digits of accuracy. Absolute tolernace is the accuracy near 0.
 
 In addition, we may want to choose to save at more time points. We do this by giving an array of values to save at as `saveat`.
 Together, this looks like:
@@ -167,8 +167,8 @@ plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'line
 ![precise_solution](https://user-images.githubusercontent.com/1814174/39012651-e03124e6-43c9-11e8-8496-bbee87987a37.png)
 
 We can also choose to use a different algorithm. The choice is done using a string that matches the Julia syntax. See
-[the ODE tutorial for details](https://diffeq.sciml.ai/dev/tutorials/ode_example#Choosing-a-Solver-Algorithm-1).
-The list of choices for ODEs can be found at the [ODE Solvers page](https://diffeq.sciml.ai/dev/solvers/ode_solve).
+[the ODE tutorial for details](https://diffeq.sciml.ai/dev/tutorials/ode_example/#Choosing-a-Solver-Algorithm-1).
+The list of choices for ODEs can be found at the [ODE Solvers page](https://diffeq.sciml.ai/dev/solvers/ode_solve/).
 For example, let's use a 9th order method due to Verner:
 
 ```R
@@ -179,9 +179,9 @@ Note that each algorithm choice will cause a JIT compilation.
 
 ## Performance Enhancements
 
-One way to enhance the performance of your code is to define the function in Julia 
-so that way it is JIT compiled. diffeqr is built using 
-[the JuliaCall package](https://github.com/Non-Contradiction/JuliaCall), and so 
+One way to enhance the performance of your code is to define the function in Julia
+so that way it is JIT compiled. diffeqr is built using
+[the JuliaCall package](https://github.com/Non-Contradiction/JuliaCall), and so
 you can utilize the Julia JIT compiler. We expose this automatically over ODE
 functions via `jitoptimize_ode`, like in the following example:
 
@@ -200,7 +200,7 @@ fastprob <- diffeqr::jitoptimize_ode(de,prob)
 sol <- de$solve(fastprob,de$Tsit5())
 ```
 
-Note that the first evaluation of the function will have an ~2 second lag since 
+Note that the first evaluation of the function will have an ~2 second lag since
 the compiler will run, and all subsequent runs will be orders of magnitude faster
 than the pure R function. This means it's great for expensive functions (ex. large
 PDEs) or functions called repeatedly, like during optimization of parameters.
@@ -226,14 +226,14 @@ To demonstrate the performance advantage, let's time them all:
 
 ```R
 > system.time({ for (i in 1:100){ de$solve(prob    ,de$Tsit5()) }})
-   user  system elapsed 
-   6.69    0.06    6.78 
+   user  system elapsed
+   6.69    0.06    6.78
 > system.time({ for (i in 1:100){ de$solve(fastprob,de$Tsit5()) }})
-   user  system elapsed 
-   0.11    0.03    0.14 
+   user  system elapsed
+   0.11    0.03    0.14
 > system.time({ for (i in 1:100){ de$solve(prob3   ,de$Tsit5()) }})
-   user  system elapsed 
-   0.14    0.02    0.15 
+   user  system elapsed
+   0.14    0.02    0.15
 ```
 
 This is about a 50x improvement!
@@ -306,10 +306,10 @@ Let's see how much faster the JIT-compiled version was:
 
 ```R
 > system.time({ for (i in 1:5){ de$solve(prob    ) }})
-   user  system elapsed 
- 146.40    0.75  147.22 
+   user  system elapsed
+ 146.40    0.75  147.22
 > system.time({ for (i in 1:5){ de$solve(fastprob) }})
-   user  system elapsed 
+   user  system elapsed
    1.07    0.10    1.17
 ```
 
@@ -317,8 +317,8 @@ Holy Monster's Inc. that's about 145x faster.
 
 ### Systems of SDEs with Non-Diagonal Noise
 
-In many cases you may want to share noise terms across the system. This is known as non-diagonal noise. The 
-[DifferentialEquations.jl SDE Tutorial](https://diffeq.sciml.ai/dev/tutorials/sde_example#Example-4:-Systems-of-SDEs-with-Non-Diagonal-Noise-1)
+In many cases you may want to share noise terms across the system. This is known as non-diagonal noise. The
+[DifferentialEquations.jl SDE Tutorial](https://diffeq.sciml.ai/dev/tutorials/sde_example/#Example-4:-Systems-of-SDEs-with-Non-Diagonal-Noise-1)
 explains how the matrix form of the diffusion term corresponds to the summation style of multiple Wiener processes. Essentially,
 the row corresponds to which system the term is applied to, and the column is which noise term. So `du[i,j]` is the amount of
 noise due to the `j`th Wiener process that's applied to `u[i]`. We solve the Lorenz system with correlated noise as follows:
@@ -452,7 +452,7 @@ of the derivative at the initial time point! This is why declaring discontinuiti
 
 In many cases one is interested in solving the same ODE many times over many
 different initial conditions and parameters. In diffeqr parlance this is called
-an ensemble solve. diffeqr inherits the parallelism tools of the 
+an ensemble solve. diffeqr inherits the parallelism tools of the
 [SciML ecosystem](https://sciml.ai/) that are used for things like
 [automated equation discovery and acceleration](https://arxiv.org/abs/2001.04385).
 Here we will demonstrate using these parallel tools to accelerate the solving
@@ -475,7 +475,7 @@ prob <- de$ODEProblem(lorenz,u0,tspan,p)
 fastprob <- diffeqr::jitoptimize_ode(de,prob)
 ```
 
-Now we use the `EnsembleProblem` as defined on the 
+Now we use the `EnsembleProblem` as defined on the
 [ensemble parallelism page of the documentation](https://diffeq.sciml.ai/stable/features/ensemble/):
 Let's build an ensemble by utilizing uniform random numbers to randomize the
 initial conditions and parameters:
@@ -541,7 +541,7 @@ Using `lapply` to generate the ensemble we get:
 
 ```
 > system.time({ lapply(1:1000,lorenz_solve) })
-   user  system elapsed 
+   user  system elapsed
  225.81    0.46  226.63
 ```
 
@@ -549,8 +549,8 @@ Now let's see how the JIT-accelerated serial Julia version stacks up against tha
 
 ```
 > system.time({ de$solve(ensembleprob,de$Tsit5(),de$EnsembleSerial(),trajectories=1000,saveat=0.01) })
-   user  system elapsed 
-   2.75    0.30    3.08 
+   user  system elapsed
+   2.75    0.30    3.08
 ```
 
 Julia is already about 73x faster than the pure R solvers here! Now let's add
@@ -558,8 +558,8 @@ GPU-acceleration to the mix:
 
 ```
 > system.time({ de$solve(ensembleprob,de$Tsit5(),degpu$EnsembleGPUArray(),trajectories=1000,saveat=0.01) })
-   user  system elapsed 
-   1.33    1.57    2.93 
+   user  system elapsed
+   1.33    1.57    2.93
 ```
 
 That's only around 2x faster. But the GPU acceleartion is made for massively
@@ -569,13 +569,13 @@ see what happens to the Julia serial and GPU at 10,000 trajectories:
 
 ```
 > system.time({ de$solve(ensembleprob,de$Tsit5(),de$EnsembleSerial(),trajectories=10000,saveat=0.01) })
-   user  system elapsed 
-  35.02    4.19   39.25 
+   user  system elapsed
+  35.02    4.19   39.25
 ```
 
 ```
 > system.time({ de$solve(ensembleprob,de$Tsit5(),degpu$EnsembleGPUArray(),trajectories=10000,saveat=0.01) })
-   user  system elapsed 
+   user  system elapsed
   12.03    3.57   15.60
 ```
 
@@ -656,4 +656,3 @@ if you need the most speed, you may want to move to the Julia version to get the
 most out of your GPU due to Float32's, and when using GPUs make sure it's a problem
 with a relatively average or low memory pressure, and these methods will give
 orders of magnitude acceleration compared to what you might be used to.
-
