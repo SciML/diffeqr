@@ -106,7 +106,7 @@ Here we utilized the parameter array `p`. Thus we use `diffeqr::ode.solve` like 
 
 ```R
 u0 <- c(1.0,0.0,0.0)
-tspan <- list(0.0,100.0)
+tspan <- c(0.0,100.0)
 p <- c(10.0,28.0,8/3)
 prob <- de$ODEProblem(f, u0, tspan, p)
 sol <- de$solve(prob)
@@ -254,7 +254,7 @@ g <- function(u,p,t) {
   return(0.87*u)
 }
 u0 <- 1/2
-tspan <- list(0.0,1.0)
+tspan <- c(0.0,1.0)
 prob <- de$SDEProblem(f,g,u0,tspan)
 sol <- de$solve(prob)
 udf <- as.data.frame(t(sapply(sol$u,identity)))
