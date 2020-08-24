@@ -167,8 +167,8 @@ plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'line
 ![precise_solution](https://user-images.githubusercontent.com/1814174/39012651-e03124e6-43c9-11e8-8496-bbee87987a37.png)
 
 We can also choose to use a different algorithm. The choice is done using a string that matches the Julia syntax. See
-[the ODE tutorial for details](https://diffeq.sciml.ai/dev/tutorials/ode_example.html#Choosing-a-Solver-Algorithm-1).
-The list of choices for ODEs can be found at the [ODE Solvers page](https://diffeq.sciml.ai/dev/solvers/ode_solve.html).
+[the ODE tutorial for details](https://diffeq.sciml.ai/dev/tutorials/ode_example#Choosing-a-Solver-Algorithm-1).
+The list of choices for ODEs can be found at the [ODE Solvers page](https://diffeq.sciml.ai/dev/solvers/ode_solve).
 For example, let's use a 9th order method due to Verner:
 
 ```R
@@ -318,7 +318,7 @@ Holy Monster's Inc. that's about 145x faster.
 ### Systems of SDEs with Non-Diagonal Noise
 
 In many cases you may want to share noise terms across the system. This is known as non-diagonal noise. The 
-[DifferentialEquations.jl SDE Tutorial](https://diffeq.sciml.ai/dev/tutorials/sde_example.html#Example-4:-Systems-of-SDEs-with-Non-Diagonal-Noise-1)
+[DifferentialEquations.jl SDE Tutorial](https://diffeq.sciml.ai/dev/tutorials/sde_example#Example-4:-Systems-of-SDEs-with-Non-Diagonal-Noise-1)
 explains how the matrix form of the diffusion term corresponds to the summation style of multiple Wiener processes. Essentially,
 the row corresponds to which system the term is applied to, and the column is which noise term. So `du[i,j]` is the amount of
 noise due to the `j`th Wiener process that's applied to `u[i]`. We solve the Lorenz system with correlated noise as follows:

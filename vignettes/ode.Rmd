@@ -24,7 +24,7 @@ Let's solve the linear ODE `u'=1.01u`. First setup the package:
 de <- diffeqr::diffeq_setup()
 ```
 
-Define the derivative function `f(u,p,t)`. 
+Define the derivative function `f(u,p,t)`.
 
 ```R
 f <- function(u,p,t) {
@@ -48,12 +48,12 @@ sol = de$solve(prob)
 
 This gives back a solution object for which `sol$t` are the time points
 and `sol$u` are the values. We can treat the solution as a continuous object
-in time via 
+in time via
 
-and a high order interpolation will compute the value at `t=0.2`. We can check 
+and a high order interpolation will compute the value at `t=0.2`. We can check
 the solution by plotting it:
 
-```R 
+```R
 plot(sol$t,sol$u,"l")
 ```
 
@@ -121,7 +121,7 @@ Plotly is much prettier!
 
 If we want to have a more accurate solution, we can send `abstol` and `reltol`. Defaults are `1e-6` and `1e-3` respectively.
 Generally you can think of the digits of accuracy as related to 1 plus the exponent of the relative tolerance, so the default is
-two digits of accuracy. Absolute tolernace is the accuracy near 0. 
+two digits of accuracy. Absolute tolernace is the accuracy near 0.
 
 In addition, we may want to choose to save at more time points. We do this by giving an array of values to save at as `saveat`.
 Together, this looks like:
@@ -138,8 +138,8 @@ plotly::plot_ly(udf, x = ~V1, y = ~V2, z = ~V3, type = 'scatter3d', mode = 'line
 ![precise_solution](https://user-images.githubusercontent.com/1814174/39012651-e03124e6-43c9-11e8-8496-bbee87987a37.png)
 
 We can also choose to use a different algorithm. The choice is done using a string that matches the Julia syntax. See
-[the ODE tutorial for details](https://diffeq.sciml.ai/dev/tutorials/ode_example.html#Choosing-a-Solver-Algorithm-1).
-The list of choices for ODEs can be found at the [ODE Solvers page](https://diffeq.sciml.ai/dev/solvers/ode_solve.html).
+[the ODE tutorial for details](https://diffeq.sciml.ai/dev/tutorials/ode_example#Choosing-a-Solver-Algorithm-1).
+The list of choices for ODEs can be found at the [ODE Solvers page](https://diffeq.sciml.ai/dev/solvers/ode_solve).
 For example, let's use a 9th order method due to Verner:
 
 ```R
@@ -150,9 +150,9 @@ Note that each algorithm choice will cause a JIT compilation
 
 ## Performance Enhancements
 
-One way to enhance the performance of your code is to define the function in Julia 
-so that way it is JIT compiled. diffeqr is built using 
-[the JuliaCall package](https://github.com/Non-Contradiction/JuliaCall), and so 
+One way to enhance the performance of your code is to define the function in Julia
+so that way it is JIT compiled. diffeqr is built using
+[the JuliaCall package](https://github.com/Non-Contradiction/JuliaCall), and so
 you can utilize the Julia JIT compiler. We expose this automatically over ODE
 functions via `jitoptimize_ode`, like in the following example:
 
@@ -171,7 +171,7 @@ fastprob <- diffeqr::jitoptimize_ode(de,prob)
 sol <- de$solve(fastprob,de$Tsit5())
 ```
 
-Note that the first evaluation of the function will have an ~2 second lag since 
+Note that the first evaluation of the function will have an ~2 second lag since
 the compiler will run, and all subsequent runs will be orders of magnitude faster
 than the pure R function. This means it's great for expensive functions (ex. large
 PDEs) or functions called repeatedly, like during optimization of parameters.
@@ -197,14 +197,14 @@ To demonstrate the performance advantage, let's time them all:
 
 ```R
 > system.time({ for (i in 1:100){ de$solve(prob    ,de$Tsit5()) }})
-   user  system elapsed 
-   6.69    0.06    6.78 
+   user  system elapsed
+   6.69    0.06    6.78
 > system.time({ for (i in 1:100){ de$solve(fastprob,de$Tsit5()) }})
-   user  system elapsed 
-   0.11    0.03    0.14 
+   user  system elapsed
+   0.11    0.03    0.14
 > system.time({ for (i in 1:100){ de$solve(prob3   ,de$Tsit5()) }})
-   user  system elapsed 
-   0.14    0.02    0.15 
+   user  system elapsed
+   0.14    0.02    0.15
 ```
 
 This is about a 50x improvement!
