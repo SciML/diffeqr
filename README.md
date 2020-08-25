@@ -32,7 +32,7 @@ installation of DifferentialEquations.jl will happen on the first invocation of 
 
 ## Usage
 
-diffeqr provides a direct wrapper over [DifferentialEquations.jl](diffeq.sciml.ai).
+diffeqr provides a direct wrapper over [DifferentialEquations.jl](https://diffeq.sciml.ai).
 The namespace is setup so that the standard syntax of Julia translates directly
 over to the R environment. There are two things to keep in mind:
 
