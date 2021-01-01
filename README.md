@@ -1,7 +1,8 @@
 # diffeqr
 
 [![Join the chat at https://gitter.im/JuliaDiffEq/Lobby](https://badges.gitter.im/JuliaDiffEq/Lobby.svg)](https://gitter.im/JuliaDiffEq/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![Build Status](https://travis-ci.com/SciML/diffeqr.svg?branch=master)](https://travis-ci.com/SciML/diffeqr)
+[![R build
+status](https://github.com/SciML/diffeqr/workflows/R-CMD-check/badge.svg)](https://github.com/SciML/diffeqr/actions)
 
 diffeqr is a package for solving differential equations in R. It utilizes
 [DifferentialEquations.jl](https://diffeq.sciml.ai/dev/) for its core routines
@@ -26,7 +27,7 @@ To install the master branch of the package (for developers), use:
 devtools::install_github('SciML/diffeqr', build_vignettes=T)
 ```
 
-Note that the first invocation of 
+Note that the first invocation of
 `diffeqr::diffeq_setup()` will install both Julia
 and the required packages if they are missing.
 If you wish to have it use an existing Julia binary,
