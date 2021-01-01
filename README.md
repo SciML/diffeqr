@@ -26,9 +26,13 @@ To install the master branch of the package (for developers), use:
 devtools::install_github('SciML/diffeqr', build_vignettes=T)
 ```
 
-You will need a working installation of Julia in your path. To install Julia, download a generic binary
-from [the JuliaLang site](https://julialang.org/downloads/) and add it to your path. The download and
-installation of DifferentialEquations.jl will happen on the first invocation of `diffeqr::diffeq_setup()`.
+Note that the first invocation of 
+`diffeqr::diffeq_setup()` will install both Julia
+and the required packages if they are missing.
+If you wish to have it use an existing Julia binary,
+make sure that `julia` is found in the path. For more
+information see the `julia_setup()` function from
+[JuliaCall](https://github.com/Non-Contradiction/JuliaCall).
 
 ## Usage
 
