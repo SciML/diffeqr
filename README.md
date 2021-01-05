@@ -243,6 +243,16 @@ To demonstrate the performance advantage, let's time them all:
 
 This is about a 50x improvement!
 
+#### Limitations of the JIT Compilation
+
+Using Julia's [ModelingToolkit](https://github.com/SciML/ModelingToolkit.jl)
+for tracing to JIT compile via Julia has a few known limitations:
+
+- It requires that all of the function calls are tracable. Scalar functions
+  like `cos` and `sin` all fall into this category. Notably, matrix multiplication
+  is not supported.
+- It will have a compilation lag on the first call.
+
 ## Stochastic Differential Equation (SDE) Examples
 
 ### 1D SDEs
