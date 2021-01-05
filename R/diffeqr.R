@@ -5,7 +5,7 @@
 #' Additionally, this will install Julia and the required packages
 #' if they are missing.
 #'
-#' @param pkg.check logical, check for DifferentialEquations.jl package and install if necessary
+#' @param pkg_check logical, check for DifferentialEquations.jl package and install if necessary
 #' @param ... Parameters are passed down to JuliaCall::julia_setup
 #'
 #' @examples

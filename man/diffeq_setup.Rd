@@ -7,9 +7,9 @@
 diffeq_setup(pkg_check = TRUE, ...)
 }
 \arguments{
-\item{...}{Parameters are passed down to JuliaCall::julia_setup}
+\item{pkg_check}{logical, check for DifferentialEquations.jl package and install if necessary}
 
-\item{pkg.check}{logical, check for DifferentialEquations.jl package and install if necessary}
+\item{...}{Parameters are passed down to JuliaCall::julia_setup}
 }
 \description{
 This function initializes Julia and the DifferentialEquations.jl package.
