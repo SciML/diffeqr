@@ -12,6 +12,7 @@ This is a quick patch to fix the vignettes of the v0.1.0 release.
 This is the initial release of the package. It provides a simplified interface over DifferentialEquations.jl. Currently it's interfaced via 5 functions:
 
 - diffeq_setup
+
 - ode.solve
 - sde.solve
 - dae.solve
