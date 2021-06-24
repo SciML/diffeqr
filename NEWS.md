@@ -1,3 +1,9 @@
+## Release v1.1.1
+
+This package now ensures that the tests are not run on build so that 
+installation of Julia will not occur unless the user specifically asks for it
+via diffeqr::diffeq_setup()
+
 ## Release v1.0.0
 
 Full recreation of the package. This provides a new simplified interface over

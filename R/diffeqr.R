@@ -10,7 +10,7 @@
 #'
 #' @examples
 #'
-#' \donttest{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
+#' \dontrun{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
 #'
 #' diffeqr::diffeq_setup()
 #'
@@ -47,7 +47,7 @@ julia_locate <- do.call(":::", list("JuliaCall", quote(julia_locate)))
 #'
 #' @examples
 #'
-#' \donttest{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
+#' \dontrun{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
 #' de <- diffeqr::diffeq_setup()
 #' f <- function(u,p,t) {
 #'   du1 = p[1]*(u[2]-u[1])
@@ -84,7 +84,7 @@ jitoptimize_ode <- function (de,prob){
 #'
 #' @examples
 #'
-#' \donttest{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
+#' \dontrun{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
 #'
 #' diffeqr::diffeq_setup()
 #'
@@ -108,7 +108,7 @@ jitoptimize_sde <- function (de,prob){
 #'
 #' @examples
 #'
-#' \donttest{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
+#' \dontrun{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
 #'
 #' degpu <- diffeqr::diffeqgpu_setup()
 #'
