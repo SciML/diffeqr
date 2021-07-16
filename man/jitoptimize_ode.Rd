@@ -17,7 +17,7 @@ and JIT compiler.
 }
 \examples{
 
-\donttest{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
+\dontrun{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
 de <- diffeqr::diffeq_setup()
 f <- function(u,p,t) {
   du1 = p[1]*(u[2]-u[1])
