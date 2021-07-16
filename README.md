@@ -1,6 +1,7 @@
 # diffeqr
 
 [![Join the chat at https://gitter.im/JuliaDiffEq/Lobby](https://badges.gitter.im/JuliaDiffEq/Lobby.svg)](https://gitter.im/JuliaDiffEq/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![CRAN status](https://www.r-pkg.org/badges/version/diffeqr)](https://cran.r-project.org/package=diffeqr)
 [![R build
 status](https://github.com/SciML/diffeqr/workflows/R-CMD-check/badge.svg)](https://github.com/SciML/diffeqr/actions)
 
