@@ -17,7 +17,7 @@ and JIT compiler.
 }
 \examples{
 
-\donttest{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
+\dontrun{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
 
 diffeqr::diffeq_setup()
 

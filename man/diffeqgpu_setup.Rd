@@ -12,7 +12,7 @@ The first time will be long since it includes precompilation.
 }
 \examples{
 
-\donttest{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
+\dontrun{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
 
 degpu <- diffeqr::diffeqgpu_setup()
 
