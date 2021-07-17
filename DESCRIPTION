@@ -12,11 +12,9 @@ Depends: R (>= 3.4.0)
 Encoding: UTF-8
 License: MIT + file LICENSE
 URL: https://github.com/SciML/diffeqr
-LazyData: true
 SystemRequirements: Julia (>= 1.5), DifferentialEquations.jl, ModelingToolkit.jl
 Imports:
-  JuliaCall,
-  stringr
+  JuliaCall
 RoxygenNote: 7.1.1
 Suggests: testthat,
     knitr,
