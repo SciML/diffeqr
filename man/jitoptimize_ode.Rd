@@ -15,6 +15,9 @@ jitoptimize_ode(de, prob)
 This function JIT Optimizes and ODEProblem utilizing the Julia ModelingToolkit
 and JIT compiler.
 }
+\value{
+Returns an ODEProblem which has been JIT-optimized by Julia.
+}
 \examples{
 
 \dontrun{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl

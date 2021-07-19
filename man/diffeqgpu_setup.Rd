@@ -10,9 +10,14 @@ diffeqgpu_setup()
 This function initializes the DiffEqGPU package for GPU-parallelized ensembles.
 The first time will be long since it includes precompilation.
 }
+\value{
+ Returns a degpu object which holds the module state of the Julia-side DiffEqGPU
+ package. The core use is to use degpu$EnsembleGPUArray() for choosing the GPU
+ dispatch in the solve.
+}
 \examples{
 
-\dontrun{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
+\dontrun{ ## diffeqgpu_setup() is time-consuming and requires Julia+DifferentialEquations.jl
 
 degpu <- diffeqr::diffeqgpu_setup()
 
