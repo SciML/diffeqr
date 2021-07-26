@@ -10,10 +10,11 @@
 #'
 #' @examples
 #'
-#' if (Sys.which('julia')!=''){ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
-#'   diffeqr::diffeq_setup()
-#' }
+#' \dontrun{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
 #'
+#' diffeqr::diffeq_setup()
+#'
+#' }
 #'
 #' @export
 diffeq_setup <- function (pkg_check=TRUE,...){
@@ -46,20 +47,20 @@ julia_locate <- do.call(":::", list("JuliaCall", quote(julia_locate)))
 #'
 #' @examples
 #'
-#' if (Sys.which('julia')!=''){ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
-#'   de <- diffeqr::diffeq_setup()
-#'   f <- function(u,p,t) {
-#'     du1 = p[1]*(u[2]-u[1])
-#'     du2 = u[1]*(p[2]-u[3]) - u[2]
-#'     du3 = u[1]*u[2] - p[3]*u[3]
-#'     return(c(du1,du2,du3))
-#'   }
-#'   u0 <- c(1.0,0.0,0.0)
-#'   tspan <- c(0.0,100.0)
-#'   p <- c(10.0,28.0,8/3)
-#'   prob <- de$ODEProblem(f, u0, tspan, p)
-#'   fastprob <- diffeqr::jitoptimize_ode(de,prob)
-#'   sol <- de$solve(fastprob,de$Tsit5())
+#' \dontrun{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
+#' de <- diffeqr::diffeq_setup()
+#' f <- function(u,p,t) {
+#'   du1 = p[1]*(u[2]-u[1])
+#'   du2 = u[1]*(p[2]-u[3]) - u[2]
+#'   du3 = u[1]*u[2] - p[3]*u[3]
+#'   return(c(du1,du2,du3))
+#' }
+#' u0 <- c(1.0,0.0,0.0)
+#' tspan <- c(0.0,100.0)
+#' p <- c(10.0,28.0,8/3)
+#' prob <- de$ODEProblem(f, u0, tspan, p)
+#' fastprob <- diffeqr::jitoptimize_ode(de,prob)
+#' sol <- de$solve(fastprob,de$Tsit5())
 #' }
 #'
 #' @export
@@ -83,8 +84,10 @@ jitoptimize_ode <- function (de,prob){
 #'
 #' @examples
 #'
-#' if (Sys.which('julia')!=''){ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
-#'   diffeqr::diffeq_setup()
+#' \dontrun{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
+#'
+#' diffeqr::diffeq_setup()
+#'
 #' }
 #'
 #' @export
@@ -105,8 +108,10 @@ jitoptimize_sde <- function (de,prob){
 #'
 #' @examples
 #'
-#' if (Sys.which('julia')!=''){ ## diffeqgpu_setup() is time-consuming and requires Julia+DifferentialEquations.jl
-#'  degpu <- diffeqr::diffeqgpu_setup()
+#' \dontrun{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
+#'
+#' degpu <- diffeqr::diffeqgpu_setup()
+#'
 #' }
 #'
 #' @export
