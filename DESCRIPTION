@@ -8,7 +8,7 @@ Description: An interface to 'DifferentialEquations.jl' <https://diffeq.sciml.ai
   delay differential equations (DDE), differential-algebraic equations (DAE), and more. Much of the functionality,
   including features like adaptive time stepping in SDEs, are unique and allow for multiple orders of magnitude speedup over more common methods.
   'diffeqr' attaches an R interface onto the package, allowing seamless use of this tooling by R users. For more information,
-  see Rackauckas and Nie (2017) <doi:http://doi.org/10.5334/jors.151>.
+  see Rackauckas and Nie (2017) <doi:10.5334/jors.151>.
 Depends: R (>= 3.4.0)
 Encoding: UTF-8
 License: MIT + file LICENSE
