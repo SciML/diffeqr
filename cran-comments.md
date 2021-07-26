@@ -17,7 +17,8 @@ Previously, the package was archived on CRAN due to accidentally installing
 Julia on the CRAN computers. Given the comments from the Twitter thread
 https://twitter.com/ChrisRackauckas/status/1405518810958991361, the community
 suggested the fix of using \dontrun instead of \donttest to the offending examples, 
-which is the fix that has been implemented here.
+which is the fix that was implemented but rejected and so it was replaced with a
+check for whether "julia" is in the system path.
 
 ## R CMD check results
 

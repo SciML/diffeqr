@@ -20,10 +20,8 @@ Returns an SDEProblem which has been JIT-optimized by Julia.
 }
 \examples{
 
-\dontrun{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
-
-diffeqr::diffeq_setup()
-
+if (Sys.which('julia')!=''){ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
+  diffeqr::diffeq_setup()
 }
 
 }
