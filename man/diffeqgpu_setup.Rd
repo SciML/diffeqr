@@ -17,7 +17,9 @@ The first time will be long since it includes precompilation.
 }
 \examples{
 
-if (Sys.which('julia')!=''){ ## diffeqgpu_setup() is time-consuming and requires Julia+DifferentialEquations.jl
+if (Sys.which('julia')!=''){
+  ## diffeqgpu_setup() is time-consuming and
+  ## requires Julia+DifferentialEquations.jl
   degpu <- diffeqr::diffeqgpu_setup()
 }
 
