@@ -11,13 +11,13 @@ Proper use of this package requires a Julia and DifferentialEquations.jl install
 This is noted in the installation guide. The Github Actions tests show that on
 the major operating systems, if this is installed, then the package will successfully
 pass its tests. However, since these softwares are not available on all of the CRAN
-computers the tests fail as expected there, and are thus skipped.
-
-Previously, the package was archived on CRAN due to accidentally installing
-Julia on the CRAN computers. Given the comments from the Twitter thread
-https://twitter.com/ChrisRackauckas/status/1405518810958991361, the community
-suggested the fix of using \dontrun instead of \donttest to the offending examples, 
-which is the fix that has been implemented here.
+computers the tests fail as expected there, and are thus skipped. Uwe had suggested
+updating the CRAN Julia installation, but this will still require a 
+DifferentialEquations.jl installation, which itself will pull in other binaries,
+will be something we will want to be frequently updated, etc. which I can
+foresee leading to its own set of issues. Thus we believe the best approach is
+to simply \dontrun on CRAN and use our own CI for handling the various
+operating systems and binary installations.
 
 ## R CMD check results
 
