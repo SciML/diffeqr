@@ -1,7 +1,7 @@
 Package: diffeqr
 Type: Package
 Title: Solving Differential Equations (ODEs, SDEs, DDEs, DAEs)
-Version: 1.1.1
+Version: 1.1.2
 Authors@R: person("Christopher", "Rackauckas", email = "me@chrisrackauckas.com", role = c("aut", "cre", "cph"))
 Description: An interface to 'DifferentialEquations.jl' <https://diffeq.sciml.ai/dev/> from the R programming language.
   It has unique high performance methods for solving ordinary differential equations (ODE), stochastic differential equations (SDE),
@@ -13,7 +13,7 @@ Depends: R (>= 3.4.0)
 Encoding: UTF-8
 License: MIT + file LICENSE
 URL: https://github.com/SciML/diffeqr
-SystemRequirements: Julia (>= 1.5), DifferentialEquations.jl, ModelingToolkit.jl
+SystemRequirements: Julia (>= 1.6), DifferentialEquations.jl, ModelingToolkit.jl
 Imports:
   JuliaCall
 RoxygenNote: 7.1.1

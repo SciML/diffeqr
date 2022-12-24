@@ -1,7 +1,7 @@
 ## Test Environments
 
-* local Windows 10 install, R 4.1
-* local CentOS 7 install, R 4.1
+* local Windows 10 install, R 4.2
+* local CentOS 7 install, R 4.2
 * Windows-latest (on GitHub action), R-release
 * Ubuntu 20.04 (on GitHub action), R-release and R-devel
 

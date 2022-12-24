@@ -1,3 +1,7 @@
+## Release v1.1.2
+
+Bugfixes for newer Julia versions.
+
 ## Release v1.1.1
 
 This package now ensures that the tests are not run on build so that 
