@@ -97,7 +97,14 @@ jitoptimize_ode <- function (de,prob){
 #'
 #' @export
 jitoptimize_sde <- function (de,prob){
-  sdesys = de$modelingtoolkitize(prob)
+  JuliaCall::julia_install_package_if_needed("ModelingToolkit")
+  JuliaCall::julia_library("ModelingToolkit")
+  functions <- JuliaCall::julia_eval("filter(isascii, replace.(string.(propertynames(ModelingToolkit)),\"!\"=>\"_bang\"))")
+
+  # Can remove the de argument when breaking, but kept for backwards compat
+  mtk <- julia_pkg_import("ModelingToolkit",functions)
+
+  sdesys = mtk$modelingtoolkitize(prob)
   JuliaCall::julia_assign("sdesys", sdesys)
   jul_f = JuliaCall::julia_eval("jitf = SDEFunction(sdesys,jac=true)")
   JuliaCall::julia_assign("u0", prob$u0)
