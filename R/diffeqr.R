@@ -18,7 +18,6 @@
 #'
 #' @export
 diffeq_setup <- function (pkg_check=TRUE,...){
-  print("tes")
   julia <- JuliaCall::julia_setup(installJulia=TRUE,...)
   if(pkg_check) JuliaCall::julia_install_package_if_needed("DifferentialEquations")
   JuliaCall::julia_library("DifferentialEquations")
