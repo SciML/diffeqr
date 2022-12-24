@@ -18,12 +18,10 @@
 #'
 #' @export
 diffeq_setup <- function (pkg_check=TRUE,...){
+  print("tes")
   julia <- JuliaCall::julia_setup(installJulia=TRUE,...)
   if(pkg_check) JuliaCall::julia_install_package_if_needed("DifferentialEquations")
   JuliaCall::julia_library("DifferentialEquations")
-
-  JuliaCall::julia_install_package_if_needed("ModelingToolkit")
-  JuliaCall::julia_library("ModelingToolkit")
 
   functions <- JuliaCall::julia_eval("filter(isascii, replace.(string.(propertynames(DifferentialEquations)),\"!\"=>\"_bang\"))")
   de <- julia_pkg_import("DifferentialEquations",functions)
@@ -65,7 +63,14 @@ julia_locate <- do.call(":::", list("JuliaCall", quote(julia_locate)))
 #'
 #' @export
 jitoptimize_ode <- function (de,prob){
-  odesys = de$modelingtoolkitize(prob)
+  JuliaCall::julia_install_package_if_needed("ModelingToolkit")
+  JuliaCall::julia_library("ModelingToolkit")
+  functions <- JuliaCall::julia_eval("filter(isascii, replace.(string.(propertynames(ModelingToolkit)),\"!\"=>\"_bang\"))")
+
+  # Can remove the de argument when breaking, but kept for backwards compat
+  mtk <- julia_pkg_import("ModelingToolkit",functions)
+
+  odesys = mtk$modelingtoolkitize(prob)
   JuliaCall::julia_assign("odesys", odesys)
   jul_f = JuliaCall::julia_eval("jitf = ODEFunction(odesys,jac=true)")
   JuliaCall::julia_assign("u0", prob$u0)
@@ -92,7 +97,14 @@ jitoptimize_ode <- function (de,prob){
 #'
 #' @export
 jitoptimize_sde <- function (de,prob){
-  sdesys = de$modelingtoolkitize(prob)
+  JuliaCall::julia_install_package_if_needed("ModelingToolkit")
+  JuliaCall::julia_library("ModelingToolkit")
+  functions <- JuliaCall::julia_eval("filter(isascii, replace.(string.(propertynames(ModelingToolkit)),\"!\"=>\"_bang\"))")
+
+  # Can remove the de argument when breaking, but kept for backwards compat
+  mtk <- julia_pkg_import("ModelingToolkit",functions)
+
+  sdesys = mtk$modelingtoolkitize(prob)
   JuliaCall::julia_assign("sdesys", sdesys)
   jul_f = JuliaCall::julia_eval("jitf = SDEFunction(sdesys,jac=true)")
   JuliaCall::julia_assign("u0", prob$u0)
