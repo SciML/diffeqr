@@ -399,8 +399,8 @@ differential_vars <- c(TRUE,TRUE,FALSE)
 prob <- de$DAEProblem(f,du0,u0,tspan,differential_vars=differential_vars)
 sol <- de$solve(prob)
 udf <- as.data.frame(t(sapply(sol$u,identity)))
-plotly::plot_ly(udf, x = sol$t, y = ~V1, type = 'scatter', mode = 'lines') %>%
-  plotly::add_trace(y = ~V2) %>%
+plotly::plot_ly(udf, x = sol$t, y = ~V1, type = 'scatter', mode = 'lines') |>
+  plotly::add_trace(y = ~V2) |>
   plotly::add_trace(y = ~V3)
 ```
 
@@ -456,7 +456,7 @@ JuliaCall::julia_assign("constant_lags", tspan)
 prob <- JuliaCall::julia_eval("DDEProblem(f, u0, h, tspan, constant_lags = constant_lags)")
 sol <- de$solve(prob,de$MethodOfSteps(de$Tsit5()))
 udf <- as.data.frame(t(sapply(sol$u,identity)))
-plotly::plot_ly(udf, x = sol$t, y = ~V1, type = 'scatter', mode = 'lines') %>% plotly::add_trace(y = ~V2)
+plotly::plot_ly(udf, x = sol$t, y = ~V1, type = 'scatter', mode = 'lines') |> plotly::add_trace(y = ~V2)
 ```
 
 ![delay](https://user-images.githubusercontent.com/1814174/39023532-10bdd750-43f0-11e8-837d-156d33ea2f99.png)
