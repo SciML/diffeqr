@@ -123,7 +123,7 @@ jitoptimize_sde <- function (de,prob){
 #'
 #' \dontrun{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
 #'
-#' degpu <- diffeqr::diffeqgpu_setup()
+#' degpu <- diffeqr::diffeqgpu_setup(backend="CUDA")
 #'
 #' }
 #'
@@ -138,22 +138,26 @@ diffeqgpu_setup <- function (backend){
     JuliaCall::julia_install_package_if_needed("CUDA")
     JuliaCall::julia_library("CUDA")
     backend <- julia_pkg_import("CUDA",c("CUDABackend"))
+    degpu$CUDABackend <- backend$CUDABackend
   } else if (backend == "AMDGPU") {
     JuliaCall::julia_install_package_if_needed("AMDGPU")
     JuliaCall::julia_library("AMDGPU")
     backend <- julia_pkg_import("AMDGPU",c("AMDGPUBackend"))
+    degpu$AMDGPUBackend <- backend$AMDGPUBackend
   } else if (backend == "Metal") {
     JuliaCall::julia_install_package_if_needed("Metal")
     JuliaCall::julia_library("Metal")
     backend <- julia_pkg_import("Metal",c("MetalBackend"))
+    degpu$MetalBackend <- backend$MetalBackend
   } else if (backend == "oneAPI") {
     JuliaCall::julia_install_package_if_needed("oneAPI")
     JuliaCall::julia_library("oneAPI")
     backend <- julia_pkg_import("oneAPI",c("oneAPIBackend"))
+    degpu$oneAPIBackend <- backend$oneAPIBackend
   } else {
     stop(paste("Illegal backend choice found. Allowed choices: CUDA, AMDGPU, Metal, and oneAPI. Chosen backend: ", backend))
   }
-  list(degpu, backend)
+  degpu
 }
 
 julia_function <- function(func_name, pkg_name = "Main",
