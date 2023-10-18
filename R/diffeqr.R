@@ -149,7 +149,7 @@ diffeqgpu_setup <- function (backend){
     JuliaCall::julia_library("oneAPI")
     backend <- julia_pkg_import("oneAPI",c("oneAPIBackend"))
   } else {
-    stop(paste("Illegal backend choice found. Allowed choices: CUDA, AMDGPU, Metal, and oneAPI. Chosen backend: ", backend)
+    stop(paste("Illegal backend choice found. Allowed choices: CUDA, AMDGPU, Metal, and oneAPI. Chosen backend: ", backend))
   }
   list(degpu, backend)
 }
