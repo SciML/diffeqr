@@ -117,6 +117,8 @@ jitoptimize_sde <- function (de,prob){
 #' This function initializes the DiffEqGPU package for GPU-parallelized ensembles.
 #' The first time will be long since it includes precompilation.
 #'
+#' @param backend the backend for the GPU computation. Choices are "CUDA", "AMDGPU", "Metal", or "oneAPI"
+#'
 #' @examples
 #'
 #' \dontrun{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
