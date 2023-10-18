@@ -4,7 +4,7 @@
 \alias{diffeqgpu_setup}
 \title{Setup DiffEqGPU}
 \usage{
-diffeqgpu_setup(backend="CUDA")
+diffeqgpu_setup(backend)
 }
 \description{
 This function initializes the DiffEqGPU package for GPU-parallelized ensembles.
