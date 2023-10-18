@@ -514,14 +514,32 @@ The `diffeqr::diffeqgpu_setup()` helper function will install CUDA for you and
 bring all of the bindings into the returned object:
 
 ```R
-degpu <- diffeqr::diffeqgpu_setup()
+gpusetup <- diffeqr::diffeqgpu_setup(backend = "CUDA")
+degpu = gpusetup[1]
+backend = gpusetup[2]
 ```
 
-Now we simply use `EnsembleGPUArray()` to solve 10,000 ODEs on the GPU in parallel:
+Now we simply use `EnsembleGPUKernel(backend = backend$CUDABackend())` with a
+GPU-specialized ODE solver `GPUTsit5()` to solve 10,000 ODEs on the GPU in 
+parallel:
 
 ```R
-sol <- de$solve(ensembleprob,de$Tsit5(),degpu$EnsembleGPUArray(),trajectories=10000,saveat=0.01)
+sol <- de$solve(ensembleprob,degpu$GPUTsit5(),degpu$EnsembleGPUKernel(backend = backend$CUDABackend()),trajectories=10000,saveat=0.01)
 ```
+
+For the full list of choices for specialized GPU solvers, see 
+[the DiffEqGPU.jl documentation](https://docs.sciml.ai/DiffEqGPU/stable/manual/ensemblegpukernel/).
+
+Note that `EnsembleGPUArray` can be used as well, like:
+
+```R
+sol <- de$solve(ensembleprob,degpu$GPUTsit5(),degpu$EnsembleGPUKernel(backend = backend$CUDABackend()),trajectories=10000,saveat=0.01)
+```
+
+though we highly recommend the `EnsembleGPUKernel` methods for more speed. Given
+the way the JIT compilation performed will also ensure that the faster kernel
+generation methods work, `EnsembleGPUKernel` is almost certainly the
+better choice in most applications.
 
 ### Benchmark
 
@@ -573,7 +591,7 @@ Julia is already about 73x faster than the pure R solvers here! Now let's add
 GPU-acceleration to the mix:
 
 ```
-> system.time({ de$solve(ensembleprob,de$Tsit5(),degpu$EnsembleGPUArray(),trajectories=1000,saveat=0.01) })
+> system.time({ de$solve(ensembleprob,degpu$GPUTsit5(),degpu$EnsembleGPUKernel(backend = backend$CUDABackend()),trajectories=1000,saveat=0.01) })
    user  system elapsed
    1.33    1.57    2.93
 ```
@@ -590,7 +608,7 @@ see what happens to the Julia serial and GPU at 10,000 trajectories:
 ```
 
 ```
-> system.time({ de$solve(ensembleprob,de$Tsit5(),degpu$EnsembleGPUArray(),trajectories=10000,saveat=0.01) })
+> system.time({ de$solve(ensembleprob,degpu$GPUTsit5(),degpu$EnsembleGPUKernel(backend = backend$CUDABackend()),trajectories=10000,saveat=0.01) })
    user  system elapsed
   12.03    3.57   15.60
 ```
@@ -598,7 +616,7 @@ see what happens to the Julia serial and GPU at 10,000 trajectories:
 To compare this to the pure Julia code:
 
 ```julia
-using OrdinaryDiffEq, DiffEqGPU
+using OrdinaryDiffEq, DiffEqGPU, CUDA
 function lorenz(du,u,p,t)
  @inbounds begin
      du[1] = p[1]*(u[2]-u[1])
@@ -614,7 +632,7 @@ p = [10.0f0,28.0f0,8/3f0]
 prob = ODEProblem(lorenz,u0,tspan,p)
 prob_func = (prob,i,repeat) -> remake(prob,u0=rand(Float32,3).*u0,p=rand(Float32,3).*p)
 monteprob = EnsembleProblem(prob, prob_func = prob_func, safetycopy=false)
-@time sol = solve(monteprob,Tsit5(),EnsembleGPUArray(),trajectories=10_000,saveat=0.01f0)
+@time sol = solve(monteprob,GPUTsit5(),EnsembleGPUKernel(backend = CUDA.CUDABackend()),trajectories=10_000,saveat=0.01f0)
 
 # 9.444439 seconds (22.96 M allocations: 6.464 GiB, 44.53% gc time)
 ```
@@ -628,7 +646,7 @@ To see how this scales in Julia, let's take it to insane heights. First, let's
 reduce the amount we're saving:
 
 ```julia
-@time sol = solve(monteprob,Tsit5(),EnsembleGPUArray(),trajectories=10_000,saveat=1.0f0)
+@time sol = solve(monteprob,GPUTsit5(),EnsembleGPUKernel(backend = CUDA.CUDABackend()),trajectories=10_000,saveat=1.0f0)
 # 0.801215 seconds (1.66 M allocations: 133.846 MiB)
 ```
 
@@ -636,7 +654,7 @@ This highlights that controlling memory pressure is key with GPU usage: you will
 get much better performance when requiring less saved points on the GPU.
 
 ```julia
-@time sol = solve(monteprob,Tsit5(),EnsembleGPUArray(),trajectories=100_000,saveat=1.0f0)
+@time sol = solve(monteprob,GPUTsit5(),EnsembleGPUKernel(backend = CUDA.CUDABackend()),trajectories=100_000,saveat=1.0f0)
 # 1.871536 seconds (6.66 M allocations: 919.521 MiB, 2.48% gc time)
 ```
 
@@ -650,7 +668,7 @@ compared to serial:
 And now we start to see that scaling power! Let's solve 1 million trajectories:
 
 ```julia
-@time sol = solve(monteprob,Tsit5(),EnsembleGPUArray(),trajectories=1_000_000,saveat=1.0f0)
+@time sol = solve(monteprob,GPUTsit5(),EnsembleGPUKernel(backend = CUDA.CUDABackend()),trajectories=1_000_000,saveat=1.0f0)
 # 25.234710 seconds (56.53 M allocations: 8.579 GiB, 51.61% gc time)
 ```
 
