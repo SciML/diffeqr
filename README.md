@@ -12,7 +12,7 @@ stochastic differential equations (SDEs), delay differential equations (DDEs), a
 differential-algebraic equations (DAEs) directly in R.
 
 If you have any questions, or just want to chat about solvers/using the package,
-please feel free to chat in the [Gitter channel](https://gitter.im/JuliaDiffEq/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge). For bug reports, feature requests, etc., please submit an issue.
+please feel free to chat in the [Zulip channel]([https://gitter.im/JuliaDiffEq/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge](https://julialang.zulipchat.com/#narrow/stream/279055-sciml-bridged)). For bug reports, feature requests, etc., please submit an issue.
 
 ## Installation
 
