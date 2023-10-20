@@ -4,7 +4,7 @@
 \alias{diffeqgpu_setup}
 \title{Setup DiffEqGPU}
 \usage{
-diffeqgpu_setup(backend)
+diffeqgpu_setup("CUDA")
 }
 \description{
 This function initializes the DiffEqGPU package for GPU-parallelized ensembles.
@@ -19,7 +19,7 @@ The first time will be long since it includes precompilation.
 
 \dontrun{ ## diffeqgpu_setup() is time-consuming and requires Julia+DifferentialEquations.jl
 
-degpu <- diffeqr::diffeqgpu_setup(backend="CUDA")
+degpu <- diffeqr::diffeqgpu_setup("CUDA")
 
 }
 
