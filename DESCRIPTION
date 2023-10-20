@@ -1,12 +1,13 @@
 Package: diffeqr
 Type: Package
 Title: Solving Differential Equations (ODEs, SDEs, DDEs, DAEs)
-Version: 1.1.3
+Version: 2.0.0
 Authors@R: person("Christopher", "Rackauckas", email = "me@chrisrackauckas.com", role = c("aut", "cre", "cph"))
 Description: An interface to 'DifferentialEquations.jl' <https://diffeq.sciml.ai/dev/> from the R programming language.
   It has unique high performance methods for solving ordinary differential equations (ODE), stochastic differential equations (SDE),
   delay differential equations (DDE), differential-algebraic equations (DAE), and more. Much of the functionality,
   including features like adaptive time stepping in SDEs, are unique and allow for multiple orders of magnitude speedup over more common methods.
+  Supports GPUs, with support for CUDA (NVIDIA), AMD GPUs, Intel oneAPI GPUs, and Apple's Metal (M-series chip GPUs).
   'diffeqr' attaches an R interface onto the package, allowing seamless use of this tooling by R users. For more information,
   see Rackauckas and Nie (2017) <doi:10.5334/jors.151>.
 Depends: R (>= 3.4.0)
