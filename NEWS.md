@@ -1,3 +1,8 @@
+## Release v2.0.0
+
+Support new DiffEqGPU syntax. This requires passing a backend. Supports NVIDIA CUDA, Intel OneAPI,
+AMD GPUs, and Apple Metal GPUs. Also much faster GPU compilation and runtime performance.
+
 ## Release v1.1.2
 
 Bugfixes for newer Julia versions.
