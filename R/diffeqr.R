@@ -70,7 +70,7 @@ jitoptimize_ode <- function (de,prob){
   mtk <- julia_pkg_import("ModelingToolkit",functions)
 
   odesys = mtk$modelingtoolkitize(prob)
-  odesys = mtk$structural_simplify(odesys)
+  odesys = mtk$complete(odesys)
   
   JuliaCall::julia_assign("odesys", odesys)
   jul_f = JuliaCall::julia_eval("jitf = ODEFunction(odesys,jac=true)")
