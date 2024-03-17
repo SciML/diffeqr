@@ -106,7 +106,7 @@ jitoptimize_sde <- function (de,prob){
   mtk <- julia_pkg_import("ModelingToolkit",functions)
 
   sdesys = mtk$modelingtoolkitize(prob)
-  sdesys = mtk$structural_simplify(sdesys)
+  sdesys = mtk$complete(sdesys)
   JuliaCall::julia_assign("sdesys", sdesys)
   jul_f = JuliaCall::julia_eval("jitf = SDEFunction(sdesys,jac=true)")
   JuliaCall::julia_assign("u0", prob$u0)
