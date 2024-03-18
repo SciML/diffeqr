@@ -1,3 +1,7 @@
+## Release v2.0.1
+
+Updated to support ModelingToolkit v9 from the Julia side with the JIT compilation.
+
 ## Release v2.0.0
 
 Support new DiffEqGPU syntax. This requires passing a backend. Supports NVIDIA CUDA, Intel OneAPI,
