@@ -70,10 +70,9 @@ jitoptimize_ode <- function (de,prob){
   mtk <- julia_pkg_import("ModelingToolkit",functions)
 
   odesys = mtk$modelingtoolkitize(prob)
-  odesys = mtk$complete(odesys)
   
   JuliaCall::julia_assign("odesys", odesys)
-  jul_f = JuliaCall::julia_eval("jitf = ODEFunction(odesys,jac=true)")
+  jul_f = JuliaCall::julia_eval("jitf = ODEFunction(complete(odesys, split=false),jac=true)")
   JuliaCall::julia_assign("u0", prob$u0)
   JuliaCall::julia_assign("p", prob$p)
   JuliaCall::julia_assign("tspan", prob$tspan)
@@ -106,9 +105,8 @@ jitoptimize_sde <- function (de,prob){
   mtk <- julia_pkg_import("ModelingToolkit",functions)
 
   sdesys = mtk$modelingtoolkitize(prob)
-  sdesys = mtk$complete(sdesys)
   JuliaCall::julia_assign("sdesys", sdesys)
-  jul_f = JuliaCall::julia_eval("jitf = SDEFunction(sdesys,jac=true)")
+  jul_f = JuliaCall::julia_eval("jitf = SDEFunction(complete(sdesys, split=false),jac=true)")
   JuliaCall::julia_assign("u0", prob$u0)
   JuliaCall::julia_assign("p", prob$p)
   JuliaCall::julia_assign("tspan", prob$tspan)
