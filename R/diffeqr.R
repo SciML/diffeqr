@@ -72,11 +72,8 @@ jitoptimize_ode <- function (de,prob){
   odesys = mtk$modelingtoolkitize(prob)
   
   JuliaCall::julia_assign("odesys", odesys)
-  jul_f = JuliaCall::julia_eval("jitf = ODEFunction(complete(odesys, split=false),jac=true)")
-  JuliaCall::julia_assign("u0", prob$u0)
-  JuliaCall::julia_assign("p", prob$p)
   JuliaCall::julia_assign("tspan", prob$tspan)
-  new_prob <- JuliaCall::julia_eval("ODEProblem(jitf, u0, tspan, p)")
+  new_prob <- JuliaCall::julia_eval("ODEProblem(complete(odesys, split=false), [], tspan; jac=true)")
 }
 
 #' Jit Optimize an SDEProblem
@@ -106,11 +103,8 @@ jitoptimize_sde <- function (de,prob){
 
   sdesys = mtk$modelingtoolkitize(prob)
   JuliaCall::julia_assign("sdesys", sdesys)
-  jul_f = JuliaCall::julia_eval("jitf = SDEFunction(complete(sdesys, split=false),jac=true)")
-  JuliaCall::julia_assign("u0", prob$u0)
-  JuliaCall::julia_assign("p", prob$p)
   JuliaCall::julia_assign("tspan", prob$tspan)
-  new_prob <- JuliaCall::julia_eval("SDEProblem(jitf, jitf.g, u0, tspan, p)")
+  new_prob <- JuliaCall::julia_eval("SDEProblem(complete(sdesys, split=false), [], tspan; jac=true)")
 }
 
 #' Setup DiffEqGPU
