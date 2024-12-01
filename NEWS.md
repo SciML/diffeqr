@@ -1,3 +1,7 @@
+## Release v2.1.0
+
+Better support for ModelingToolkit JIT tracing on SDEs.
+
 ## Release v2.0.1
 
 Updated to support ModelingToolkit v9 from the Julia side with the JIT compilation.
