@@ -33,7 +33,7 @@ and the required packages if they are missing.
 If you wish to have it use an existing Julia binary,
 make sure that `julia` is found in the path. For more
 information see the `julia_setup()` function from
-[JuliaCall](https://github.com/Non-Contradiction/JuliaCall).
+[JuliaCall](https://github.com/JuliaInterop/JuliaCall).
 
 ## Google Collab Notebooks
 
@@ -193,7 +193,7 @@ Note that each algorithm choice will cause a JIT compilation.
 
 One way to enhance the performance of your code is to define the function in Julia
 so that way it is JIT compiled. diffeqr is built using
-[the JuliaCall package](https://github.com/Non-Contradiction/JuliaCall), and so
+[the JuliaCall package](https://github.com/JuliaInterop/JuliaCall), and so
 you can utilize the Julia JIT compiler. We expose this automatically over ODE
 functions via `jitoptimize_ode`, like in the following example:
 
