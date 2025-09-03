@@ -14,7 +14,7 @@ Depends: R (>= 3.4.0)
 Encoding: UTF-8
 License: MIT + file LICENSE
 URL: https://github.com/SciML/diffeqr
-SystemRequirements: Julia (>= 1.10), DifferentialEquations.jl, ModelingToolkit.jl
+SystemRequirements: Julia (>= 1.6), DifferentialEquations.jl, ModelingToolkit.jl
 Imports:
   JuliaCall
 RoxygenNote: 7.1.1

@@ -1,6 +1,6 @@
 ## Release v2.1.1
 
-Update default Julia installation to version 1.10 to improve compatibility with R 4.5.0, particularly on macOS M2 systems. Fixes installation issues that were occurring with the previous Julia 1.9.4 default.
+Improved Julia installation stability and R 4.5.0 compatibility. Fixed upstream JuliaCall to install LTS (Long-Term Support) Julia versions by default instead of latest versions, providing better stability and compatibility across R versions.
 
 ## Release v2.1.0
 
