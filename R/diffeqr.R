@@ -19,6 +19,19 @@
 #' @export
 diffeq_setup <- function (pkg_check=TRUE,...){
   julia <- JuliaCall::julia_setup(installJulia=TRUE, version="1.10.10", ...)
+  
+  # Check Julia version for R 4.5.0+ compatibility
+  if (getRversion() >= "4.5.0") {
+    julia_version <- tryCatch({
+      JuliaCall::julia_eval("string(VERSION)")
+    }, error = function(e) "unknown")
+    
+    if (julia_version != "unknown" && julia_version < "1.10.0") {
+      warning("Julia version ", julia_version, " may not be compatible with R ", getRversion(), 
+              ". Consider upgrading to Julia 1.10+ for better compatibility.")
+    }
+  }
+  
   if(pkg_check) {
     tryCatch({
       JuliaCall::julia_install_package_if_needed("DifferentialEquations")
