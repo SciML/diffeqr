@@ -8,6 +8,7 @@ name: R-CMD-check
 jobs:
   R-CMD-check:
     runs-on: ${{ matrix.config.os }}
+    timeout-minutes: 60
 
     name: ${{ matrix.config.os }} (${{ matrix.config.r }})
 
@@ -47,6 +48,14 @@ jobs:
           path: ${{ env.R_LIBS_USER }}
           key: ${{ runner.os }}-${{ hashFiles('.github/R-version') }}-1-${{ hashFiles('.github/depends.Rds') }}
           restore-keys: ${{ runner.os }}-${{ hashFiles('.github/R-version') }}-1-
+
+      - name: Cache Julia installation
+        if: runner.os != 'Windows'
+        uses: actions/cache@v4
+        with:
+          path: ~/.julia
+          key: ${{ runner.os }}-julia-1.10-${{ hashFiles('**/Project.toml') }}
+          restore-keys: ${{ runner.os }}-julia-1.10-
 
       - name: Install system dependencies
         if: runner.os == 'Linux'

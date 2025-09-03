@@ -3,7 +3,6 @@ context("SDEs")
 test_that('1D works',{
 
   skip_on_cran()
-  skip_if(Sys.getenv("CI") != "", "Skip on CI - Julia installation too time-consuming")
 
   de <- diffeqr::diffeq_setup()
   f <- function(u,p,t) {
@@ -24,7 +23,6 @@ test_that('1D works',{
 test_that('diagonal noise works',{
 
   skip_on_cran()
-  skip_if(Sys.getenv("CI") != "", "Skip on CI - Julia installation too time-consuming")
   de <- diffeqr::diffeq_setup()
   f <- function(u,p,t) {
     du1 = p[1]*(u[2]-u[1])
@@ -47,7 +45,6 @@ test_that('diagonal noise works',{
 test_that('diagonal noise JIT works',{
 
   skip_on_cran()
-  skip_if(Sys.getenv("CI") != "", "Skip on CI - Julia installation too time-consuming")
   de <- diffeqr::diffeq_setup()
   f <- function(u,p,t) {
     du1 = p[1]*(u[2]-u[1])
@@ -71,7 +68,6 @@ test_that('diagonal noise JIT works',{
 test_that('non-diagonal noise works',{
 
   skip_on_cran()
-  skip_if(Sys.getenv("CI") != "", "Skip on CI - Julia installation too time-consuming")
   de <- diffeqr::diffeq_setup()
   f <- JuliaCall::julia_eval("
   function f(du,u,p,t)
