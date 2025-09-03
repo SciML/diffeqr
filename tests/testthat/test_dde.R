@@ -3,6 +3,7 @@ context("DDEs")
 test_that('DDEs work',{
 
   skip_on_cran()
+  skip_if(Sys.getenv("CI") != "", "Skip on CI - Julia installation too time-consuming")
 
   de <- diffeqr::diffeq_setup()
   f <- JuliaCall::julia_eval("function f(du, u, h, p, t)

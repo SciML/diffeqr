@@ -3,6 +3,7 @@ context("DAEs")
 test_that('DAEs work',{
 
   skip_on_cran()
+  skip_if(Sys.getenv("CI") != "", "Skip on CI - Julia installation too time-consuming")
 
   de <- diffeqr::diffeq_setup()
   f <- function (du,u,p,t) {

@@ -2,6 +2,7 @@ context("ODEs")
 
 test_that('1D works',{
   skip_on_cran()
+  skip_if(Sys.getenv("CI") != "", "Skip on CI - Julia installation too time-consuming")
   de <- diffeqr::diffeq_setup()
   f <- function(u,p,t) {
     return(1.01*u)
@@ -17,6 +18,7 @@ test_that('1D works',{
 test_that('ODE system works',{
 
   skip_on_cran()
+  skip_if(Sys.getenv("CI") != "", "Skip on CI - Julia installation too time-consuming")
   de <- diffeqr::diffeq_setup()
   f <- function(u,p,t) {
     du1 = p[1]*(u[2]-u[1])
@@ -43,6 +45,7 @@ test_that('ODE system works',{
 test_that('ODE JIT works',{
 
   skip_on_cran()
+  skip_if(Sys.getenv("CI") != "", "Skip on CI - Julia installation too time-consuming")
   de <- diffeqr::diffeq_setup()
   ff <- function(u,p,t) {
     du1 = p[1]*(u[2]-u[1])
