@@ -1,3 +1,7 @@
+## Release v2.1.1
+
+Update default Julia installation to version 1.10 to improve compatibility with R 4.5.0, particularly on macOS M2 systems. Fixes installation issues that were occurring with the previous Julia 1.9.4 default.
+
 ## Release v2.1.0
 
 Better support for ModelingToolkit JIT tracing on SDEs.
