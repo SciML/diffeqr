@@ -91,7 +91,7 @@ test_that('non-diagonal noise works',{
   JuliaCall::julia_assign("u0", u0)
   JuliaCall::julia_assign("tspan", tspan)
   JuliaCall::julia_assign("noise_rate_prototype", noise_rate_prototype)
-  prob <- JuliaCall::julia_eval("SDEProblem(f, g, u0, tspan, p, noise_rate_prototype=noise_rate_prototype)")
+  prob <- JuliaCall::julia_eval("SDEProblem(f, g, u0, tspan, nothing, noise_rate_prototype=noise_rate_prototype)")
   sol <- de$solve(prob)
   udf <- as.data.frame(t(sapply(sol$u,identity)))
   expect_true(length(sol$t)>10)
