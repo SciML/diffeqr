@@ -704,3 +704,4 @@ if you need the most speed, you may want to move to the Julia version to get the
 most out of your GPU due to Float32's, and when using GPUs make sure it's a problem
 with a relatively average or low memory pressure, and these methods will give
 orders of magnitude acceleration compared to what you might be used to.
+
