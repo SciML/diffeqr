@@ -30,7 +30,7 @@ g <- function(u,p,t) {
   return(0.87*u)
 }
 u0 <- 1/2
-tspan <- list(0.0,1.0)
+tspan <- c(0.0,1.0)
 prob <- de$SDEProblem(f,g,u0,tspan)
 sol <- de$solve(prob)
 udf <- as.data.frame(t(sapply(sol$u,identity)))
