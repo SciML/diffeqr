@@ -39,8 +39,8 @@ differential_vars <- c(TRUE,TRUE,FALSE)
 prob <- de$DAEProblem(f,du0,u0,tspan,differential_vars=differential_vars)
 sol <- de$solve(prob)
 udf <- as.data.frame(t(sapply(sol$u,identity)))
-plotly::plot_ly(udf, x = sol$t, y = ~V1, type = 'scatter', mode = 'lines') %>%
-  plotly::add_trace(y = ~V2) %>%
+plotly::plot_ly(udf, x = sol$t, y = ~V1, type = 'scatter', mode = 'lines') |>
+  plotly::add_trace(y = ~V2) |>
   plotly::add_trace(y = ~V3)
 ```
 

@@ -35,7 +35,7 @@ make sure that `julia` is found in the path. For more
 information see the `julia_setup()` function from
 [JuliaCall](https://github.com/JuliaInterop/JuliaCall).
 
-## Google Collab Notebooks
+## Google Colab Notebooks
 
 As a demonstration, check out the following notebooks:
 
@@ -162,7 +162,7 @@ Plotly is much prettier!
 
 If we want to have a more accurate solution, we can send `abstol` and `reltol`. Defaults are `1e-6` and `1e-3` respectively.
 Generally you can think of the digits of accuracy as related to 1 plus the exponent of the relative tolerance, so the default is
-two digits of accuracy. Absolute tolernace is the accuracy near 0.
+two digits of accuracy. Absolute tolerance is the accuracy near 0.
 
 In addition, we may want to choose to save at more time points. We do this by giving an array of values to save at as `saveat`.
 Together, this looks like:
@@ -458,7 +458,7 @@ tspan <- c(0.0, 100.0)
 constant_lags <- c(20.0)
 JuliaCall::julia_assign("u0", u0)
 JuliaCall::julia_assign("tspan", tspan)
-JuliaCall::julia_assign("constant_lags", tspan)
+JuliaCall::julia_assign("constant_lags", constant_lags)
 prob <- JuliaCall::julia_eval("DDEProblem(f, u0, h, tspan, constant_lags = constant_lags)")
 sol <- de$solve(prob,de$MethodOfSteps(de$Tsit5()))
 udf <- as.data.frame(t(sapply(sol$u,identity)))

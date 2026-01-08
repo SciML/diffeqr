@@ -50,6 +50,10 @@ This gives back a solution object for which `sol$t` are the time points
 and `sol$u` are the values. We can treat the solution as a continuous object
 in time via
 
+```R
+sol$.(0.2)
+```
+
 and a high order interpolation will compute the value at `t=0.2`. We can check
 the solution by plotting it:
 
@@ -77,7 +81,7 @@ Here we utilized the parameter array `p`. Thus we use `diffeqr::ode.solve` like 
 
 ```R
 u0 <- c(1.0,0.0,0.0)
-tspan <- list(0.0,100.0)
+tspan <- c(0.0,100.0)
 p <- c(10.0,28.0,8/3)
 prob <- de$ODEProblem(f, u0, tspan, p)
 sol <- de$solve(prob)
