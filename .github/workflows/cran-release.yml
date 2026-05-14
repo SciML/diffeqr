@@ -1,0 +1,75 @@
+name: CRAN submission
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  submit:
+    if: ${{ github.event_name == 'workflow_dispatch' || !github.event.release.prerelease }}
+    runs-on: ubuntu-latest
+    environment:
+      name: cran-submission
+      url: https://cran.r-project.org/package=diffeqr
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-tinytex@v2
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: |
+            any::devtools
+            any::rcmdcheck
+          needs: check
+
+      - name: Build source tarball
+        id: build
+        run: |
+          tarball=$(R CMD build . | tail -1 | grep -oE "[^ ']+\.tar\.gz")
+          echo "Built tarball: $tarball"
+          echo "tarball=$tarball" >> "$GITHUB_OUTPUT"
+
+      - name: R CMD check --as-cran
+        env:
+          _R_CHECK_CRAN_INCOMING_REMOTE_: false
+        run: R CMD check --as-cran --no-manual "${{ steps.build.outputs.tarball }}"
+
+      - name: Attach tarball to GitHub release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "${{ github.event.release.tag_name }}" \
+            "${{ steps.build.outputs.tarball }}" --repo "${{ github.repository }}"
+
+      - name: Submit to CRAN
+        run: Rscript -e 'devtools::submit_cran()'
+
+      - name: Show CRAN-SUBMISSION record
+        if: always()
+        run: |
+          if [ -f CRAN-SUBMISSION ]; then
+            echo "::group::CRAN-SUBMISSION"
+            cat CRAN-SUBMISSION
+            echo "::endgroup::"
+          else
+            echo "No CRAN-SUBMISSION file written."
+          fi
+
+      - name: Upload check artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rcheck-results
+          path: "*.Rcheck"
+          if-no-files-found: ignore
