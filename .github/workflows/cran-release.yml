@@ -1,0 +1,117 @@
+name: Prepare CRAN submission
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  build-check:
+    if: ${{ github.event_name == 'workflow_dispatch' || !github.event.release.prerelease }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      tarball: ${{ steps.metadata.outputs.tarball }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - name: Validate release metadata
+        id: metadata
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          desc <- read.dcf("DESCRIPTION")
+          package <- desc[1, "Package"]
+          version <- desc[1, "Version"]
+          if (Sys.getenv("GITHUB_EVENT_NAME") == "release") {
+            tag <- Sys.getenv("RELEASE_TAG")
+            expected <- paste0("v", version)
+            if (tag != expected) {
+              stop("Release tag ", sQuote(tag), " must match DESCRIPTION version ", expected, call. = FALSE)
+            }
+            cran <- sprintf("https://cran.r-project.org/web/packages/%s/DESCRIPTION", package)
+            published <- read.dcf(url(cran), fields = "Version")[1, "Version"]
+            if (package_version(version) <= package_version(published)) {
+              stop(package, " ", version, " must be newer than CRAN version ", published, call. = FALSE)
+            }
+          }
+          cat("tarball=", package, "_", version, ".tar.gz\n", sep = "",
+              file = Sys.getenv("GITHUB_OUTPUT"), append = TRUE)
+        shell: Rscript --vanilla {0}
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-tinytex@v2
+
+      - name: Install qpdf
+        run: |
+          if ! command -v qpdf; then
+            sudo apt-get update
+            sudo apt-get install -y --no-install-recommends qpdf
+          fi
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: |
+            any::rcmdcheck
+            any::yaml
+          needs: check
+
+      - name: Test release workflow
+        run: Rscript --vanilla .github/cran-release-test.R
+
+      - name: Build source tarball
+        env:
+          TARBALL: ${{ steps.metadata.outputs.tarball }}
+        run: |
+          R CMD build .
+          test -f "$TARBALL"
+
+      - name: R CMD check --as-cran
+        env:
+          TARBALL: ${{ steps.metadata.outputs.tarball }}
+          _R_CHECK_CRAN_INCOMING_REMOTE_: 'true'
+        run: |
+          rcmdcheck::rcmdcheck(Sys.getenv("TARBALL"), args = "--as-cran",
+                               error_on = "warning", check_dir = "check")
+        shell: Rscript {0}
+
+      - name: Upload checked tarball
+        uses: actions/upload-artifact@v4
+        with:
+          name: cran-source
+          path: ${{ steps.metadata.outputs.tarball }}
+          if-no-files-found: error
+
+      - name: Upload check artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rcheck-results
+          path: check
+          if-no-files-found: ignore
+
+  attach:
+    if: github.event_name == 'release'
+    needs: build-check
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: cran-source
+
+      - name: Attach checked tarball for manual CRAN submission
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          TARBALL: ${{ needs.build-check.outputs.tarball }}
+        run: gh release upload --repo "$GITHUB_REPOSITORY" -- "$RELEASE_TAG" "$TARBALL"
