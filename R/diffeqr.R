@@ -24,11 +24,11 @@ diffeq_setup <- function (pkg_check=TRUE,...){
 
   functions <- JuliaCall::julia_eval("filter(isascii, replace.(string.(propertynames(DifferentialEquations)),\"!\"=>\"_bang\"))")
   de <- julia_pkg_import("DifferentialEquations",functions)
-  JuliaCall::autowrap("DiffEqBase.AbstractODESolution", fields = c("t","u"))
-  JuliaCall::autowrap("DiffEqBase.AbstractRODESolution", fields = c("t","u"))
-  JuliaCall::autowrap("DiffEqBase.AbstractDDESolution", fields = c("t","u"))
-  JuliaCall::autowrap("DiffEqBase.AbstractDAESolution", fields = c("t","u"))
-  JuliaCall::autowrap("DiffEqBase.EnsembleSolution", fields = c("t","u"))
+  JuliaCall::autowrap("SciMLBase.AbstractODESolution", fields = c("t","u"))
+  JuliaCall::autowrap("SciMLBase.AbstractRODESolution", fields = c("t","u"))
+  JuliaCall::autowrap("SciMLBase.AbstractDDESolution", fields = c("t","u"))
+  JuliaCall::autowrap("SciMLBase.AbstractDAESolution", fields = c("t","u"))
+  JuliaCall::autowrap("SciMLBase.EnsembleSolution", fields = c("t","u"))
   de
 }
 
