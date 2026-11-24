@@ -15,7 +15,9 @@ diffeq_setup(pkg_check = TRUE, ...)
 This function initializes Julia and the DifferentialEquations.jl package.
 The first time will be long since it includes precompilation.
 Additionally, this will install Julia and the required packages
-if they are missing.
+if they are missing. With DifferentialEquations.jl v8 and later, which no
+longer bundles the SDE and DDE solvers, StochasticDiffEq.jl and
+DelayDiffEq.jl are installed and loaded as well.
 }
 \value{Returns the de object which gives R-side calls to DifferentialEquations.jl's
 functions. For example, de$solve calls the DifferentialEquations.solve function,

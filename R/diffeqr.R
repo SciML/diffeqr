@@ -3,7 +3,9 @@
 #' This function initializes Julia and the DifferentialEquations.jl package.
 #' The first time will be long since it includes precompilation.
 #' Additionally, this will install Julia and the required packages
-#' if they are missing.
+#' if they are missing. With DifferentialEquations.jl v8 and later, which no
+#' longer bundles the SDE and DDE solvers, StochasticDiffEq.jl and
+#' DelayDiffEq.jl are installed and loaded as well.
 #'
 #' @param pkg_check logical, check for DifferentialEquations.jl package and install if necessary
 #' @param ... Parameters are passed down to JuliaCall::julia_setup
@@ -24,6 +26,20 @@ diffeq_setup <- function (pkg_check=TRUE,...){
 
   functions <- JuliaCall::julia_eval("filter(isascii, replace.(string.(propertynames(DifferentialEquations)),\"!\"=>\"_bang\"))")
   de <- julia_pkg_import("DifferentialEquations",functions)
+
+  # DifferentialEquations.jl v8 no longer bundles the SDE and DDE solvers
+  if(JuliaCall::julia_eval("pkgversion(DifferentialEquations) >= v\"8\"")){
+    for(pkg in c("StochasticDiffEq","DelayDiffEq")){
+      if(pkg_check) JuliaCall::julia_install_package_if_needed(pkg)
+      JuliaCall::julia_library(pkg)
+      pkg_functions <- JuliaCall::julia_eval(sprintf("filter(isascii, replace.(string.(propertynames(%s)),\"!\"=>\"_bang\"))",pkg))
+      for(fname in setdiff(pkg_functions,functions)){
+        julia_function(func_name = fname, pkg_name = pkg, env = de)
+      }
+      functions <- union(functions,pkg_functions)
+    }
+  }
+
   JuliaCall::autowrap("SciMLBase.AbstractODESolution", fields = c("t","u"))
   JuliaCall::autowrap("SciMLBase.AbstractRODESolution", fields = c("t","u"))
   JuliaCall::autowrap("SciMLBase.AbstractDDESolution", fields = c("t","u"))

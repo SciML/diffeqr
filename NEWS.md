@@ -1,3 +1,8 @@
+## Unreleased
+
+Support DifferentialEquations.jl v8, which no longer bundles the SDE and DDE solvers or exposes
+`DiffEqBase`. `diffeq_setup()` now also loads StochasticDiffEq.jl and DelayDiffEq.jl in that case.
+
 ## Release v2.1.0
 
 Better support for ModelingToolkit JIT tracing on SDEs.
