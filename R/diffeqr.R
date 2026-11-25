@@ -85,22 +85,39 @@ filter_library_path <- function(){
 # the install happens here, leaving room to load libunwind before Julia starts.
 # `...` is bound to julia_setup()'s formals as JuliaCall would bind it.
 setup_julia <- function(...){
-  args <- as.list(match.call(JuliaCall::julia_setup,
-                             as.call(c(quote(julia_setup), list(...), installJulia = TRUE))))[-1]
+  forwarded <- match.call(expand.dots = FALSE)$...
+  supplied <- as.list(substitute(list(...))[-1])
+  names(supplied) <- names(as.list(forwarded))
+  for (i in seq_along(supplied)) {
+    if (!identical(supplied[[i]], quote(expr = ))) {
+      supplied[[i]] <- as.name(paste0("..", i))
+    }
+  }
+  setup_call <- as.call(c(list(quote(JuliaCall::julia_setup)), supplied,
+                          list(installJulia = TRUE)))
+  matched_call <- match.call(JuliaCall::julia_setup, setup_call,
+                             expand.dots = FALSE)
   if (Sys.info()[["sysname"]] == "Linux") {
-    bindir <- julia_bindir(args$JULIA_HOME)
+    JULIA_HOME <- if (is.null(matched_call$JULIA_HOME)) NULL else
+      eval(matched_call$JULIA_HOME, environment())
+    bindir <- julia_bindir(JULIA_HOME)
     # a Julia that is already running needs no install, even if it is not discoverable
     if (is.null(bindir) && !any(startsWith(names(getLoadedDLLs()), "libjulia"))) {
-      if (!is.null(args$JULIA_HOME))
-        stop("Julia is not found at JULIA_HOME = ", args$JULIA_HOME, ".")
-      JuliaCall::install_julia(if ("version" %in% names(args)) args$version else formals(JuliaCall::julia_setup)$version)
+      if (!is.null(JULIA_HOME))
+        stop("Julia is not found at JULIA_HOME = ", JULIA_HOME, ".")
+      version <- if (is.null(matched_call$version)) {
+        formals(JuliaCall::julia_setup)$version
+      } else {
+        eval(matched_call$version, environment())
+      }
+      JuliaCall::install_julia(version)
       bindir <- julia_bindir()
       if (is.null(bindir)) stop("Julia is not found and automatic installation failed.")
     }
-    if (!is.null(bindir)) args$JULIA_HOME <- bindir
+    if (!is.null(bindir)) matched_call$JULIA_HOME <- bindir
     preload_julia_libunwind(bindir)
   }
-  do.call(JuliaCall::julia_setup, args, quote = TRUE)
+  eval(matched_call, environment())
 }
 
 # The embedded Julia uses R's loader, which read LD_LIBRARY_PATH at R's startup,
