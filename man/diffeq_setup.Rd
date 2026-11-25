@@ -32,7 +32,9 @@ it. To use one, install and load the package that owns it (for \code{Rodas5},
 \code{JuliaCall::julia_install_package_if_needed("OrdinaryDiffEqRosenbrock")},
 \code{JuliaCall::julia_library("OrdinaryDiffEqRosenbrock")} and then
 \code{JuliaCall::julia_eval("Rodas5()")}), or stay on
-DifferentialEquations.jl v7.
+DifferentialEquations.jl v7. On Linux, install and load such a package with
+\code{LD_LIBRARY_PATH} temporarily set to \code{""}, as in \code{NEWS.md};
+otherwise the Julia processes this starts can segfault.
 }
 \examples{
 

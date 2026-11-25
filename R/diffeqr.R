@@ -14,7 +14,9 @@
 #' \code{JuliaCall::julia_install_package_if_needed("OrdinaryDiffEqRosenbrock")},
 #' \code{JuliaCall::julia_library("OrdinaryDiffEqRosenbrock")} and then
 #' \code{JuliaCall::julia_eval("Rodas5()")}), or stay on
-#' DifferentialEquations.jl v7.
+#' DifferentialEquations.jl v7. On Linux, install and load such a package with
+#' \code{LD_LIBRARY_PATH} temporarily set to \code{""}, as in \code{NEWS.md};
+#' otherwise the Julia processes this starts can segfault.
 #'
 #' @param pkg_check logical, check for the DifferentialEquations.jl package, and
 #' with DifferentialEquations.jl v8 and later also StochasticDiffEq.jl and
@@ -31,7 +33,9 @@
 #'
 #' @export
 diffeq_setup <- function (pkg_check=TRUE,...){
-  use_julia_libunwind(...)
+  restore_library_path <- filter_library_path()
+  on.exit(restore_library_path())
+  preload_julia_libunwind(...)
   julia <- JuliaCall::julia_setup(installJulia=TRUE,...)
   if(pkg_check) JuliaCall::julia_install_package_if_needed("DifferentialEquations")
   JuliaCall::julia_library("DifferentialEquations")
@@ -60,25 +64,51 @@ diffeq_setup <- function (pkg_check=TRUE,...){
   de
 }
 
-julia_locate <- do.call(":::", list("JuliaCall", quote(julia_locate)))
-
 # R puts the system library directory in LD_LIBRARY_PATH, which the loader searches
-# before Julia's own, so Julia gets the system libunwind and segfaults.
-# `...` matches julia_setup()'s arguments.
-use_julia_libunwind <- function(JULIA_HOME = NULL, ...){
-  if (Sys.info()[["sysname"]] != "Linux") return(invisible())
-  JULIA_HOME <- julia_locate(JULIA_HOME)
-  if (is.null(JULIA_HOME)) return(invisible())
-  libunwind <- file.path(dirname(JULIA_HOME), "lib", "julia", "libunwind.so.8")
-  if (!file.exists(libunwind)) return(invisible())
-  # This process reads LD_LIBRARY_PATH only at startup, so load Julia's copy first.
-  dyn.load(libunwind)
-  # Julia processes started later (package installation, precompilation) must not
-  # inherit the default system directories; the loader searches those anyway.
-  dirs <- strsplit(Sys.getenv("LD_LIBRARY_PATH"), ":")[[1]]
+# before Julia's own, so Julia processes get the system libunwind and segfault.
+# The processes started while Julia is set up or installs packages inherit this
+# filtered path. The returned function puts the caller's value back.
+filter_library_path <- function(){
+  old <- Sys.getenv("LD_LIBRARY_PATH", unset = NA)
+  if (Sys.info()[["sysname"]] != "Linux" || is.na(old)) return(function() invisible())
+  dirs <- strsplit(old, ":")[[1]]
   system_dir <- grepl("^(/usr)?/lib(64)?(/[^/]*-linux-gnu[^/]*)?/?$", dirs)
   Sys.setenv(LD_LIBRARY_PATH = paste(dirs[!system_dir], collapse = ":"))
+  function() Sys.setenv(LD_LIBRARY_PATH = old)
+}
+
+# The embedded Julia uses R's loader, which read LD_LIBRARY_PATH at R's startup,
+# so Julia's libunwind has to be loaded first. `...` matches julia_setup()'s arguments.
+preload_julia_libunwind <- function(JULIA_HOME = NULL, ...){
+  if (Sys.info()[["sysname"]] != "Linux") return(invisible())
+  bindir <- julia_bindir(JULIA_HOME)
+  if (is.null(bindir)) return(invisible())
+  libunwind <- file.path(dirname(bindir), "lib", "julia", "libunwind.so.8")
+  if (file.exists(libunwind)) dyn.load(libunwind)
   invisible()
+}
+
+# Sys.BINDIR of the Julia that JuliaCall::julia_setup(JULIA_HOME) selects on Linux,
+# or NULL if there is none yet. The lookup order is JuliaCall's.
+julia_bindir <- function(JULIA_HOME = NULL){
+  if (is.null(JULIA_HOME)) JULIA_HOME <- getOption("JULIA_HOME")
+  if (is.null(JULIA_HOME) && nzchar(Sys.getenv("JULIA_HOME"))) JULIA_HOME <- Sys.getenv("JULIA_HOME")
+  if (is.null(JULIA_HOME)) {
+    depot <- Sys.getenv("JULIA_DEPOT_PATH", unset = file.path(Sys.getenv("HOME"), ".julia"))
+    prefs <- file.path(depot, "prefs", "JuliaCall")
+    if (file.exists(prefs)) JULIA_HOME <- readChar(prefs, 256)
+  }
+  tryCatch({
+    julia <- if (!is.null(JULIA_HOME)) {
+      file.path(JULIA_HOME, "julia")
+    } else if (nzchar(Sys.which("julia"))) {
+      Sys.which("julia")
+    } else {
+      system2("bash", "-l -c 'which julia'", stdout = TRUE)[1]
+    }
+    if (!isTRUE(file.exists(julia))) NULL else
+      system2(julia, c("--startup-file=no", "-e", shQuote("print(Sys.BINDIR)")), stdout = TRUE)
+  }, warning = function(w) NULL, error = function(e) NULL)
 }
 
 #' Jit Optimize an ODEProblem
@@ -109,6 +139,8 @@ use_julia_libunwind <- function(JULIA_HOME = NULL, ...){
 #'
 #' @export
 jitoptimize_ode <- function (de,prob){
+  restore_library_path <- filter_library_path()
+  on.exit(restore_library_path())
   JuliaCall::julia_install_package_if_needed("ModelingToolkit")
   JuliaCall::julia_library("ModelingToolkit")
   functions <- JuliaCall::julia_eval("filter(isascii, replace.(string.(propertynames(ModelingToolkit)),\"!\"=>\"_bang\"))")
@@ -141,6 +173,8 @@ jitoptimize_ode <- function (de,prob){
 #'
 #' @export
 jitoptimize_sde <- function (de,prob){
+  restore_library_path <- filter_library_path()
+  on.exit(restore_library_path())
   JuliaCall::julia_install_package_if_needed("ModelingToolkit")
   JuliaCall::julia_library("ModelingToolkit")
   functions <- JuliaCall::julia_eval("filter(isascii, replace.(string.(propertynames(ModelingToolkit)),\"!\"=>\"_bang\"))")
@@ -171,7 +205,9 @@ jitoptimize_sde <- function (de,prob){
 #'
 #' @export
 diffeqgpu_setup <- function (backend){
-  use_julia_libunwind()
+  restore_library_path <- filter_library_path()
+  on.exit(restore_library_path())
+  preload_julia_libunwind()
   JuliaCall::julia_install_package_if_needed("DiffEqGPU")
   JuliaCall::julia_library("DiffEqGPU")
   functions <- JuliaCall::julia_eval("filter(isascii, replace.(string.(propertynames(DiffEqGPU)),\"!\"=>\"_bang\"))")
