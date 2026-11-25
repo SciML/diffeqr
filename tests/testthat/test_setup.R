@@ -40,9 +40,11 @@ test_that('the documented ensemble callbacks work',{
 
 # Julia can only be set up once per process, so each case runs in a fresh R process
 # whose startup search path has the system library directory.
-run_fresh_setup <- function(case, julia_root){
+run_fresh_setup <- function(case, julia_root, setup_args = list()){
   script <- tempfile(fileext = ".R")
   result <- tempfile()
+  args_file <- tempfile()
+  saveRDS(setup_args, args_file)
   ld_log <- tempfile()
   dir.create(ld_log)
   writeLines(deparse(quote({
@@ -52,26 +54,32 @@ run_fresh_setup <- function(case, julia_root){
     before <- Sys.getenv("LD_LIBRARY_PATH")
     # makes the loader of every child process log the libraries it loads
     Sys.setenv(LD_DEBUG = "libs", LD_DEBUG_OUTPUT = file.path(args[3], "ld"))
+    setup_args <- readRDS(args[5])
     installs <- 0
+    installed <- NULL
     error <- ""
-    installer <- function(...) installs <<- installs + 1
+    installer <- function(version = "latest", ...){
+      installs <<- installs + 1
+      installed <<- version
+    }
+    if (case == "installer") {
+      # No Julia is at JULIA_HOME until JuliaCall's installer puts the runtime there
+      staging <- tempfile()
+      options(JULIA_HOME = file.path(staging, "bin"))
+      installer <- function(version = "latest", ...){
+        installs <<- installs + 1
+        installed <<- version
+        file.symlink(julia_root, staging)
+      }
+    }
+    utils::assignInNamespace("install_julia", installer, "JuliaCall")
     if (case == "missing_image") {
       error <- tryCatch({
-        diffeqr::diffeq_setup(pkg_check = FALSE, sysimage_path = tempfile())
+        do.call(diffeqr::diffeq_setup, setup_args)
         ""
       }, error = conditionMessage)
     } else {
-      if (case == "installer") {
-        # No Julia is at JULIA_HOME until JuliaCall's installer puts the runtime there
-        staging <- tempfile()
-        options(JULIA_HOME = file.path(staging, "bin"))
-        installer <- function(...){
-          installs <<- installs + 1
-          file.symlink(julia_root, staging)
-        }
-      }
-      utils::assignInNamespace("install_julia", installer, "JuliaCall")
-      de <- diffeqr::diffeq_setup()
+      de <- do.call(diffeqr::diffeq_setup, setup_args)
       if (case == "installed") {
         # a running Julia that can no longer be discovered must not be installed again
         options(JULIA_HOME = tempfile())
@@ -82,11 +90,11 @@ run_fresh_setup <- function(case, julia_root){
     Sys.unsetenv(c("LD_DEBUG", "LD_DEBUG_OUTPUT"))
     maps <- grep("/libunwind\\.so", readLines("/proc/self/maps"), value = TRUE)
     saveRDS(list(before = before, after = after, error = error, installs = installs,
-                 embedded = unique(sub("^[^/]*", "", maps))), args[4])
+                 installed = installed, embedded = unique(sub("^[^/]*", "", maps))), args[4])
   })), script)
   system_dir <- paste0("/usr/lib/", R.version$arch, "-linux-gnu")
   status <- system2(file.path(R.home("bin"), "Rscript"),
-                    shQuote(c(script, case, julia_root, ld_log, result)),
+                    shQuote(c(script, case, julia_root, ld_log, result, args_file)),
                     env = c(paste0("LD_LIBRARY_PATH=", system_dir), "R_TESTS=",
                             paste0("R_LIBS=", paste(.libPaths(), collapse = ":"))))
   expect_equal(status, 0)
@@ -111,8 +119,58 @@ test_that("a failed setup leaves the caller's LD_LIBRARY_PATH alone",{
   skip_on_cran()
   skip_if_not(Sys.info()[["sysname"]] == "Linux")
   diffeqr::diffeq_setup()
-  res <- run_fresh_setup("missing_image", dirname(JuliaCall::julia_eval("Sys.BINDIR")))
+  res <- run_fresh_setup("missing_image", dirname(JuliaCall::julia_eval("Sys.BINDIR")),
+                         list(pkg_check = FALSE, sysimage_path = tempfile()))
   expect_match(res$error, "sysimage")
+  expect_equal(res$installs, 0)
+})
+
+test_that("setup forwards version and JULIA_HOME the way julia_setup() binds them",{
+  skip_on_cran()
+  skip_if_not(Sys.info()[["sysname"]] == "Linux")
+  diffeqr::diffeq_setup()
+  julia_root <- dirname(JuliaCall::julia_eval("Sys.BINDIR"))
+  image <- tempfile()
+  # a launcher that prints a line before running Julia
+  launcher <- tempfile()
+  dir.create(launcher)
+  writeLines(c("#!/bin/sh", "echo 'Julia launcher'",
+               sprintf('exec "%s" "$@"', file.path(julia_root, "bin", "julia"))),
+             file.path(launcher, "julia"))
+  Sys.chmod(file.path(launcher, "julia"), "755")
+  forms <- list(
+    named = list(pkg_check = FALSE, sysimage_path = image, version = "1.10"),
+    abbreviated = list(pkg_check = FALSE, sysimage_path = image, vers = "1.10"),
+    positional = list(FALSE, NULL, TRUE, TRUE, FALSE, TRUE, FALSE, image, "1.10"),
+    launcher = list(pkg_check = FALSE, JULIA_HOME = launcher, sysimage_path = image)
+  )
+  for (form in names(forms)) {
+    res <- run_fresh_setup("missing_image", julia_root, forms[[form]])
+    expect_match(res$error, paste("sysimage at path:", image), fixed = TRUE, info = form)
+    expect_equal(res$installs, 0, info = form)
+  }
+})
+
+test_that("an explicit JULIA_HOME without Julia is reported instead of installing Julia",{
+  skip_on_cran()
+  skip_if_not(Sys.info()[["sysname"]] == "Linux")
+  result <- tempfile()
+  script <- tempfile(fileext = ".R")
+  writeLines(deparse(quote({
+    installs <- 0
+    utils::assignInNamespace("install_julia", function(...) installs <<- installs + 1, "JuliaCall")
+    error <- tryCatch({
+      diffeqr::diffeq_setup(JULIA_HOME = tempfile())
+      ""
+    }, error = conditionMessage)
+    saveRDS(list(error = error, installs = installs), commandArgs(TRUE)[1])
+  })), script)
+  status <- system2(file.path(R.home("bin"), "Rscript"), shQuote(c(script, result)),
+                    env = c("R_TESTS=", paste0("R_LIBS=", paste(.libPaths(), collapse = ":"))))
+  expect_equal(status, 0)
+  res <- readRDS(result)
+  expect_match(res$error, "Julia is not found at JULIA_HOME")
+  expect_equal(res$installs, 0)
 })
 
 test_that("setup embeds Julia's libunwind and leaves the caller's LD_LIBRARY_PATH alone",{
@@ -125,4 +183,8 @@ test_that("setup embeds Julia's libunwind and leaves the caller's LD_LIBRARY_PAT
     expect_equal(res$installs, if (case == "installer") 1 else 0, info = case)
     expect_equal(res$embedded, res$bundled, info = case)
   }
+  res <- run_fresh_setup("installer", julia_root, list(vers = "1.10"))
+  expect_equal(res$installs, 1)
+  expect_identical(res$installed, "1.10")
+  expect_equal(res$embedded, res$bundled)
 })
