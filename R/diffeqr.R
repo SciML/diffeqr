@@ -20,6 +20,7 @@
 #'
 #' @export
 diffeq_setup <- function (pkg_check=TRUE,...){
+  use_julia_libunwind(...)
   julia <- JuliaCall::julia_setup(installJulia=TRUE,...)
   if(pkg_check) JuliaCall::julia_install_package_if_needed("DifferentialEquations")
   JuliaCall::julia_library("DifferentialEquations")
@@ -49,6 +50,25 @@ diffeq_setup <- function (pkg_check=TRUE,...){
 }
 
 julia_locate <- do.call(":::", list("JuliaCall", quote(julia_locate)))
+
+# R puts the system library directory in LD_LIBRARY_PATH, which the loader searches
+# before Julia's own, so Julia gets the system libunwind and segfaults.
+# `...` matches julia_setup()'s arguments.
+use_julia_libunwind <- function(JULIA_HOME = NULL, ...){
+  if (Sys.info()[["sysname"]] != "Linux") return(invisible())
+  JULIA_HOME <- julia_locate(JULIA_HOME)
+  if (is.null(JULIA_HOME)) return(invisible())
+  libunwind <- file.path(dirname(JULIA_HOME), "lib", "julia", "libunwind.so.8")
+  if (!file.exists(libunwind)) return(invisible())
+  # This process reads LD_LIBRARY_PATH only at startup, so load Julia's copy first.
+  dyn.load(libunwind)
+  # Julia processes started later (package installation, precompilation) must not
+  # inherit the default system directories; the loader searches those anyway.
+  dirs <- strsplit(Sys.getenv("LD_LIBRARY_PATH"), ":")[[1]]
+  system_dir <- grepl("^(/usr)?/lib(64)?(/[^/]*-linux-gnu[^/]*)?/?$", dirs)
+  Sys.setenv(LD_LIBRARY_PATH = paste(dirs[!system_dir], collapse = ":"))
+  invisible()
+}
 
 #' Jit Optimize an ODEProblem
 #'
@@ -140,6 +160,7 @@ jitoptimize_sde <- function (de,prob){
 #'
 #' @export
 diffeqgpu_setup <- function (backend){
+  use_julia_libunwind()
   JuliaCall::julia_install_package_if_needed("DiffEqGPU")
   JuliaCall::julia_library("DiffEqGPU")
   functions <- JuliaCall::julia_eval("filter(isascii, replace.(string.(propertynames(DiffEqGPU)),\"!\"=>\"_bang\"))")

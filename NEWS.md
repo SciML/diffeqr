@@ -3,6 +3,10 @@
 Support DifferentialEquations.jl v8, which no longer bundles the SDE and DDE solvers or exposes
 `DiffEqBase`. `diffeq_setup()` now also loads StochasticDiffEq.jl and DelayDiffEq.jl in that case.
 
+Fix segfaults on Linux systems with `libunwind` installed: `diffeq_setup()` now makes Julia use the
+`libunwind` it ships with, and removes the default system library directories from
+`LD_LIBRARY_PATH` so that Julia processes it starts do the same.
+
 ## Release v2.1.0
 
 Better support for ModelingToolkit JIT tracing on SDEs.
