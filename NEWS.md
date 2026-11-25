@@ -12,10 +12,10 @@ install and load the package that owns it, or stay on DifferentialEquations.jl v
 ```R
 local({
   # Linux: keeps the Julia processes that install and precompile from segfaulting
-  old <- Sys.getenv("LD_LIBRARY_PATH")
+  old <- Sys.getenv("LD_LIBRARY_PATH", unset = NA_character_)
   if (Sys.info()[["sysname"]] == "Linux") {
     Sys.setenv(LD_LIBRARY_PATH = "")
-    on.exit(Sys.setenv(LD_LIBRARY_PATH = old))
+    on.exit(if (is.na(old)) Sys.unsetenv("LD_LIBRARY_PATH") else Sys.setenv(LD_LIBRARY_PATH = old))
   }
   JuliaCall::julia_install_package_if_needed("OrdinaryDiffEqRosenbrock")
   JuliaCall::julia_library("OrdinaryDiffEqRosenbrock")
