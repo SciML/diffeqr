@@ -58,6 +58,8 @@ run_fresh_setup <- function(case, julia_root, setup_args = list(), check_unwinde
     installs <- 0
     installed <- NULL
     version_forced <- 0L
+    julia_home_forced <- 0L
+    warm_callable <- FALSE
     error <- ""
     installer <- function(version = "latest", ...){
       installs <<- installs + 1
@@ -100,7 +102,11 @@ run_fresh_setup <- function(case, julia_root, setup_args = list(), check_unwinde
       if (case == "installed") {
         # a running Julia that can no longer be discovered must not be installed again
         options(JULIA_HOME = tempfile())
-        de <- diffeqr::diffeq_setup()
+        de <- diffeqr::diffeq_setup(FALSE, JULIA_HOME = {
+          julia_home_forced <<- julia_home_forced + 1L
+          stop("unused JULIA_HOME evaluated")
+        })
+        warm_callable <- is.function(de$ODEProblem)
       }
     }
     after <- Sys.getenv("LD_LIBRARY_PATH")
@@ -108,6 +114,8 @@ run_fresh_setup <- function(case, julia_root, setup_args = list(), check_unwinde
     maps <- grep("/libunwind\\.so", readLines("/proc/self/maps"), value = TRUE)
     saveRDS(list(before = before, after = after, error = error, installs = installs,
                  installed = installed, version_forced = version_forced,
+                 julia_home_forced = julia_home_forced,
+                 warm_callable = warm_callable,
                  embedded = unique(sub("^[^/]*", "", maps))), args[4])
   })), script)
   system_dir <- paste0("/usr/lib/", R.version$arch, "-linux-gnu")
@@ -221,6 +229,10 @@ test_that("setup embeds Julia's libunwind and leaves the caller's LD_LIBRARY_PAT
     res <- run_fresh_setup(case, julia_root)
     expect_equal(res$installs, if (case == "installer") 1 else 0, info = case)
     expect_equal(res$embedded, res$bundled, info = case)
+    if (case == "installed") {
+      expect_true(res$warm_callable)
+      expect_equal(res$julia_home_forced, 0L)
+    }
   }
   res <- run_fresh_setup("installer", julia_root, list(vers = "1.10"))
   expect_equal(res$installs, 1)

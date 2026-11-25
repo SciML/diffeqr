@@ -98,24 +98,29 @@ setup_julia <- function(...){
   matched_call <- match.call(JuliaCall::julia_setup, setup_call,
                              expand.dots = FALSE)
   if (Sys.info()[["sysname"]] == "Linux") {
-    JULIA_HOME <- if (is.null(matched_call$JULIA_HOME)) NULL else
-      eval(matched_call$JULIA_HOME, environment())
-    bindir <- julia_bindir(JULIA_HOME)
-    # a Julia that is already running needs no install, even if it is not discoverable
-    if (is.null(bindir) && !any(startsWith(names(getLoadedDLLs()), "libjulia"))) {
-      if (!is.null(JULIA_HOME))
-        stop("Julia is not found at JULIA_HOME = ", JULIA_HOME, ".")
-      version <- if (is.null(matched_call$version)) {
-        formals(JuliaCall::julia_setup)$version
-      } else {
-        eval(matched_call$version, environment())
+    requested_julia_home <- matched_call$JULIA_HOME
+    requested_version <- matched_call$version
+    resolve_julia_home <- function(){
+      eval_env <- parent.env(environment())
+      JULIA_HOME <- if (is.null(requested_julia_home)) NULL else
+        eval(requested_julia_home, eval_env)
+      bindir <- julia_bindir(JULIA_HOME)
+      if (is.null(bindir) && !any(startsWith(names(getLoadedDLLs()), "libjulia"))) {
+        if (!is.null(JULIA_HOME))
+          stop("Julia is not found at JULIA_HOME = ", JULIA_HOME, ".")
+        version <- if (is.null(requested_version)) {
+          formals(JuliaCall::julia_setup)$version
+        } else {
+          eval(requested_version, eval_env)
+        }
+        JuliaCall::install_julia(version)
+        bindir <- julia_bindir()
+        if (is.null(bindir)) stop("Julia is not found and automatic installation failed.")
       }
-      JuliaCall::install_julia(version)
-      bindir <- julia_bindir()
-      if (is.null(bindir)) stop("Julia is not found and automatic installation failed.")
+      preload_julia_libunwind(bindir)
+      bindir
     }
-    if (!is.null(bindir)) matched_call$JULIA_HOME <- bindir
-    preload_julia_libunwind(bindir)
+    matched_call$JULIA_HOME <- quote(resolve_julia_home())
   }
   eval(matched_call, environment())
 }
