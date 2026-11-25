@@ -3,6 +3,30 @@
 Support DifferentialEquations.jl v8, which no longer bundles the SDE and DDE solvers or exposes
 `DiffEqBase`. `diffeq_setup()` now also loads StochasticDiffEq.jl and DelayDiffEq.jl in that case.
 
+With DifferentialEquations.jl v8, `de` exposes fewer names than with v7. For example `Rodas5`,
+`RK4`, `Euler`, `QNDF`, `DFBDF`, `RadauIIA5`, `JumpProblem`, `MIRK4`, `Shooting`,
+`KLUFactorization`, `PresetTimeCallback` and `TerminateSteadyState` are not on `de`. To use one,
+install and load the package that owns it, or stay on DifferentialEquations.jl v7. `IDA` is not on
+`de` with either version; it needs Sundials. For example:
+
+```R
+JuliaCall::julia_install_package_if_needed("OrdinaryDiffEqRosenbrock")
+JuliaCall::julia_library("OrdinaryDiffEqRosenbrock")
+sol <- de$solve(prob, JuliaCall::julia_eval("Rodas5()"))
+```
+
+The owning packages are OrdinaryDiffEqRosenbrock (`Rodas5`), OrdinaryDiffEqLowOrderRK (`RK4`,
+`Euler`), OrdinaryDiffEqBDF (`QNDF`, `DFBDF`), OrdinaryDiffEqFIRK (`RadauIIA5`), Sundials (`IDA`),
+JumpProcesses (`JumpProblem`), BoundaryValueDiffEq (`MIRK4`, `Shooting`), LinearSolve
+(`KLUFactorization`) and DiffEqCallbacks (`PresetTimeCallback`, `TerminateSteadyState`).
+
+Migrating ensembles to DifferentialEquations.jl v8:
+
+* Pass `trajectories` as an integer (`10000L`, not `10000`).
+* `prob_func` receives `(prob, ctx)` instead of `(prob, i, rep)`. `ctx` is an `EnsembleContext`:
+  use `ctx$sim_id` for the trajectory index and ``ctx$`repeat` `` for the repeat count. A
+  `function (prob, ...)` that only uses `prob` works with v7 and v8.
+
 Fix segfaults on Linux systems with `libunwind` installed: `diffeq_setup()` now makes Julia use the
 `libunwind` it ships with, and removes the default system library directories from
 `LD_LIBRARY_PATH` so that Julia processes it starts do the same.

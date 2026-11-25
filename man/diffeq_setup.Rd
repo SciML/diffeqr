@@ -7,7 +7,9 @@
 diffeq_setup(pkg_check = TRUE, ...)
 }
 \arguments{
-\item{pkg_check}{logical, check for DifferentialEquations.jl package and install if necessary}
+\item{pkg_check}{logical, check for the DifferentialEquations.jl package, and
+with DifferentialEquations.jl v8 and later also StochasticDiffEq.jl and
+DelayDiffEq.jl, and install them if necessary}
 
 \item{...}{Parameters are passed down to JuliaCall::julia_setup}
 }
@@ -22,6 +24,16 @@ DelayDiffEq.jl are installed and loaded as well.
 \value{Returns the de object which gives R-side calls to DifferentialEquations.jl's
 functions. For example, de$solve calls the DifferentialEquations.solve function,
 and de$ODEProblem calls the DifferentialEquations.}
+\details{
+With DifferentialEquations.jl v8 the returned object exposes fewer names than
+with v7: for example \code{Rodas5}, \code{RK4}, \code{QNDF},
+\code{JumpProblem} and \code{PresetTimeCallback} are not available through
+it. To use one, install and load the package that owns it (for \code{Rodas5},
+\code{JuliaCall::julia_install_package_if_needed("OrdinaryDiffEqRosenbrock")},
+\code{JuliaCall::julia_library("OrdinaryDiffEqRosenbrock")} and then
+\code{JuliaCall::julia_eval("Rodas5()")}), or stay on
+DifferentialEquations.jl v7.
+}
 \examples{
 
 \dontrun{ ## diffeq_setup() is time-consuming and requires Julia+DifferentialEquations.jl
