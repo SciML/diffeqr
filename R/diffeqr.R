@@ -83,34 +83,38 @@ filter_library_path <- function(){
 
 # JuliaCall::julia_setup() installs a missing Julia and embeds it in one call, so on Linux
 # the install happens here, leaving room to load libunwind before Julia starts.
-setup_julia <- function(JULIA_HOME = NULL, ..., version = "latest"){
+# `...` is bound to julia_setup()'s formals as JuliaCall would bind it.
+setup_julia <- function(...){
+  args <- as.list(match.call(JuliaCall::julia_setup,
+                             as.call(c(quote(julia_setup), list(...), installJulia = TRUE))))[-1]
   if (Sys.info()[["sysname"]] == "Linux") {
-    bindir <- julia_bindir(JULIA_HOME)
+    bindir <- julia_bindir(args$JULIA_HOME)
     # a Julia that is already running needs no install, even if it is not discoverable
-    if (is.null(bindir) && is.null(JULIA_HOME) && !any(startsWith(names(getLoadedDLLs()), "libjulia"))) {
-      JuliaCall::install_julia(version)
+    if (is.null(bindir) && !any(startsWith(names(getLoadedDLLs()), "libjulia"))) {
+      if (!is.null(args$JULIA_HOME))
+        stop("Julia is not found at JULIA_HOME = ", args$JULIA_HOME, ".")
+      JuliaCall::install_julia(if ("version" %in% names(args)) args$version else formals(JuliaCall::julia_setup)$version)
       bindir <- julia_bindir()
       if (is.null(bindir)) stop("Julia is not found and automatic installation failed.")
     }
-    if (!is.null(bindir)) JULIA_HOME <- bindir
-    preload_julia_libunwind(JULIA_HOME)
+    if (!is.null(bindir)) args$JULIA_HOME <- bindir
+    preload_julia_libunwind(bindir)
   }
-  JuliaCall::julia_setup(JULIA_HOME = JULIA_HOME, installJulia = TRUE, version = version, ...)
+  do.call(JuliaCall::julia_setup, args, quote = TRUE)
 }
 
 # The embedded Julia uses R's loader, which read LD_LIBRARY_PATH at R's startup,
-# so Julia's libunwind has to be loaded first. `...` matches julia_setup()'s arguments.
-preload_julia_libunwind <- function(JULIA_HOME = NULL, ...){
-  if (Sys.info()[["sysname"]] != "Linux") return(invisible())
-  bindir <- julia_bindir(JULIA_HOME)
-  if (is.null(bindir)) return(invisible())
+# so Julia's libunwind has to be loaded first.
+preload_julia_libunwind <- function(bindir){
+  if (Sys.info()[["sysname"]] != "Linux" || is.null(bindir)) return(invisible())
   libunwind <- file.path(dirname(bindir), "lib", "julia", "libunwind.so.8")
   if (file.exists(libunwind)) dyn.load(libunwind)
   invisible()
 }
 
 # Sys.BINDIR of the Julia that JuliaCall::julia_setup(JULIA_HOME) selects on Linux,
-# or NULL if there is none yet. The lookup order is JuliaCall's.
+# or NULL if there is none yet. The lookup order is JuliaCall's. A launcher may print
+# other lines, so the path is read from the one tagged line and must hold a julia.
 julia_bindir <- function(JULIA_HOME = NULL){
   if (is.null(JULIA_HOME)) JULIA_HOME <- getOption("JULIA_HOME")
   if (is.null(JULIA_HOME) && nzchar(Sys.getenv("JULIA_HOME"))) JULIA_HOME <- Sys.getenv("JULIA_HOME")
@@ -119,6 +123,7 @@ julia_bindir <- function(JULIA_HOME = NULL){
     prefs <- file.path(depot, "prefs", "JuliaCall")
     if (file.exists(prefs)) JULIA_HOME <- readChar(prefs, 256)
   }
+  tag <- "DIFFEQR_JULIA_BINDIR="
   tryCatch({
     julia <- if (!is.null(JULIA_HOME)) {
       file.path(JULIA_HOME, "julia")
@@ -127,8 +132,11 @@ julia_bindir <- function(JULIA_HOME = NULL){
     } else {
       system2("bash", "-l -c 'which julia'", stdout = TRUE)[1]
     }
-    if (!isTRUE(file.exists(julia))) NULL else
-      system2(julia, c("--startup-file=no", "-e", shQuote("print(Sys.BINDIR)")), stdout = TRUE)
+    out <- if (isTRUE(file.exists(julia)))
+      system2(julia, c("--startup-file=no", "-e", shQuote(sprintf('println("%s", Sys.BINDIR)', tag))),
+              stdout = TRUE)
+    bindir <- substring(out[startsWith(out, tag)], nchar(tag) + 1)
+    if (length(bindir) == 1 && file.access(file.path(bindir, "julia"), 1) == 0) bindir else NULL
   }, warning = function(w) NULL, error = function(e) NULL)
 }
 
@@ -228,7 +236,7 @@ jitoptimize_sde <- function (de,prob){
 diffeqgpu_setup <- function (backend){
   restore_library_path <- filter_library_path()
   on.exit(restore_library_path())
-  preload_julia_libunwind()
+  preload_julia_libunwind(julia_bindir())
   JuliaCall::julia_install_package_if_needed("DiffEqGPU")
   JuliaCall::julia_library("DiffEqGPU")
   functions <- JuliaCall::julia_eval("filter(isascii, replace.(string.(propertynames(DiffEqGPU)),\"!\"=>\"_bang\"))")
