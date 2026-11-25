@@ -40,7 +40,7 @@ test_that('the documented ensemble callbacks work',{
 
 # Julia can only be set up once per process, so each case runs in a fresh R process
 # whose startup search path has the system library directory.
-run_fresh_setup <- function(case, julia_root, setup_args = list()){
+run_fresh_setup <- function(case, julia_root, setup_args = list(), check_unwinder = TRUE){
   script <- tempfile(fileext = ".R")
   result <- tempfile()
   args_file <- tempfile()
@@ -57,6 +57,7 @@ run_fresh_setup <- function(case, julia_root, setup_args = list()){
     setup_args <- readRDS(args[5])
     installs <- 0
     installed <- NULL
+    version_forced <- 0L
     error <- ""
     installer <- function(version = "latest", ...){
       installs <<- installs + 1
@@ -73,7 +74,23 @@ run_fresh_setup <- function(case, julia_root, setup_args = list()){
       }
     }
     utils::assignInNamespace("install_julia", installer, "JuliaCall")
-    if (case == "missing_image") {
+    if (case == "blank_verbose") {
+      error <- tryCatch({
+        diffeqr::diffeq_setup(FALSE, file.path(julia_root, "bin"), ,
+                              sysimage_path = setup_args$sysimage_path)
+        ""
+      }, error = conditionMessage)
+    } else if (case == "lazy_version") {
+      error <- tryCatch({
+        diffeqr::diffeq_setup(FALSE,
+                              version = {
+                                version_forced <<- version_forced + 1L
+                                stop("unused version evaluated")
+                              },
+                              sysimage_path = setup_args$sysimage_path)
+        ""
+      }, error = conditionMessage)
+    } else if (case == "missing_image") {
       error <- tryCatch({
         do.call(diffeqr::diffeq_setup, setup_args)
         ""
@@ -90,7 +107,8 @@ run_fresh_setup <- function(case, julia_root, setup_args = list()){
     Sys.unsetenv(c("LD_DEBUG", "LD_DEBUG_OUTPUT"))
     maps <- grep("/libunwind\\.so", readLines("/proc/self/maps"), value = TRUE)
     saveRDS(list(before = before, after = after, error = error, installs = installs,
-                 installed = installed, embedded = unique(sub("^[^/]*", "", maps))), args[4])
+                 installed = installed, version_forced = version_forced,
+                 embedded = unique(sub("^[^/]*", "", maps))), args[4])
   })), script)
   system_dir <- paste0("/usr/lib/", R.version$arch, "-linux-gnu")
   status <- system2(file.path(R.home("bin"), "Rscript"),
@@ -109,9 +127,11 @@ run_fresh_setup <- function(case, julia_root, setup_args = list()){
     sub(".*calling init: ", "", grep("calling init: .*/libunwind\\.so\\.8$", log, value = TRUE))
   }))
   bundled <- file.path(julia_root, "lib", "julia", "libunwind.so.8")
-  expect_gt(length(unwinders), 0)
-  expect_equal(unique(normalizePath(unwinders)), normalizePath(bundled))
-  res$bundled <- normalizePath(bundled)
+  if (check_unwinder) {
+    expect_gt(length(unwinders), 0)
+    expect_equal(unique(normalizePath(unwinders)), normalizePath(bundled))
+    res$bundled <- normalizePath(bundled)
+  }
   res
 }
 
@@ -149,6 +169,25 @@ test_that("setup forwards version and JULIA_HOME the way julia_setup() binds the
     expect_match(res$error, paste("sysimage at path:", image), fixed = TRUE, info = form)
     expect_equal(res$installs, 0, info = form)
   }
+})
+
+test_that("setup preserves blank positional arguments and lazy version expressions",{
+  skip_on_cran()
+  skip_if_not(Sys.info()[["sysname"]] == "Linux")
+  diffeqr::diffeq_setup()
+  julia_root <- dirname(JuliaCall::julia_eval("Sys.BINDIR"))
+  image <- tempfile()
+
+  blank <- run_fresh_setup("blank_verbose", julia_root,
+                           list(sysimage_path = image), check_unwinder = FALSE)
+  expect_match(blank$error, paste("sysimage at path:", image), fixed = TRUE)
+  expect_equal(blank$installs, 0)
+
+  lazy <- run_fresh_setup("lazy_version", julia_root,
+                          list(sysimage_path = image), check_unwinder = FALSE)
+  expect_match(lazy$error, paste("sysimage at path:", image), fixed = TRUE)
+  expect_equal(lazy$version_forced, 0L)
+  expect_equal(lazy$installs, 0)
 })
 
 test_that("an explicit JULIA_HOME without Julia is reported instead of installing Julia",{
