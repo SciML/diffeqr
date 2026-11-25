@@ -510,12 +510,13 @@ ensembleprob = de$EnsembleProblem(fastprob, prob_func = prob_func, safetycopy=FA
 ```
 
 `prob_func` is called for each trajectory and returns the problem to solve. The
-arguments after `prob` depend on the DifferentialEquations.jl version. With v8
-and later the second argument is a context object (`EnsembleContext`), not the
-loop index, and the trajectory index is `ctx$sim_id`. With v7 the arguments are
-`(prob,i,rep)`, where `i` is the index. The function above only uses `prob`, so
-it takes `...` for the rest. A `prob_func` that depends on the index is written
-like this under v8:
+arguments it receives depend on the version of SciMLBase.jl, which
+`JuliaCall::julia_eval("pkgversion(SciMLBase)")` shows. With SciMLBase 3,
+`prob_func` receives `(prob, ctx)` and the trajectory index is `ctx$sim_id`.
+With SciMLBase 2, it receives `(prob, i, rep)`, including when used with
+DifferentialEquations 8.0. The function above only uses `prob`, so it takes
+`...` for the rest and works with both. A `prob_func` that depends on the index
+is written like this with SciMLBase 3:
 
 ```R
 prob_func_by_index <- function (prob,ctx){
@@ -524,7 +525,7 @@ prob_func_by_index <- function (prob,ctx){
 ```
 
 Now we solve the ensemble in serial. `trajectories` must be an R integer, such
-as `10000L`: a plain `10000` is a double, which DifferentialEquations.jl v8
+as `10000L`: a plain `10000` is a double, which SciMLBase 3
 rejects.
 
 ```R
@@ -635,8 +636,8 @@ see what happens to the Julia serial and GPU at 10,000 trajectories:
    1.22    0.23    1.50 
 ```
 
-To compare this to the pure Julia code (the two-argument `prob_func(prob, ctx)`
-is the form used with DifferentialEquations.jl v8; v7 uses `(prob, i, repeat)`):
+To compare this to the pure Julia code (this `prob_func` only uses `prob`, so it
+takes `args...` for the rest and works with SciMLBase 2 and 3):
 
 ```julia
 using OrdinaryDiffEq, DiffEqGPU, CUDA, StaticArrays
@@ -654,7 +655,7 @@ u0 = SA[1.0f0; 0.0f0; 0.0f0]
 tspan = (0.0f0, 10.0f0)
 p = SA[10.0f0, 28.0f0, 8 / 3.0f0]
 prob = ODEProblem{false}(lorenz, u0, tspan, p)
-prob_func = (prob, ctx) -> remake(prob, p = (@SVector rand(Float32, 3)) .* p)
+prob_func = (prob, args...) -> remake(prob, p = (@SVector rand(Float32, 3)) .* p)
 monteprob = EnsembleProblem(prob, prob_func = prob_func, safetycopy = false)
 @time sol = solve(monteprob, GPUTsit5(), EnsembleGPUKernel(CUDA.CUDABackend()),
     trajectories = 10_000,
