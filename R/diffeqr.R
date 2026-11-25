@@ -7,6 +7,11 @@
 #' longer bundles the SDE and DDE solvers, StochasticDiffEq.jl and
 #' DelayDiffEq.jl are installed and loaded as well.
 #'
+#' On Linux, the \code{libunwind} that Julia ships with is loaded into R before
+#' Julia starts, installing Julia first if none is found. A Julia already started
+#' in the session, e.g. by \code{JuliaCall::julia_setup()}, keeps the unwinder it
+#' started with.
+#'
 #' With DifferentialEquations.jl v8 the returned object exposes fewer names than
 #' with v7: for example \code{Rodas5}, \code{RK4}, \code{QNDF},
 #' \code{JumpProblem} and \code{PresetTimeCallback} are not available through
@@ -35,8 +40,7 @@
 diffeq_setup <- function (pkg_check=TRUE,...){
   restore_library_path <- filter_library_path()
   on.exit(restore_library_path())
-  preload_julia_libunwind(...)
-  julia <- JuliaCall::julia_setup(installJulia=TRUE,...)
+  julia <- setup_julia(...)
   if(pkg_check) JuliaCall::julia_install_package_if_needed("DifferentialEquations")
   JuliaCall::julia_library("DifferentialEquations")
 
@@ -75,6 +79,23 @@ filter_library_path <- function(){
   system_dir <- grepl("^(/usr)?/lib(64)?(/[^/]*-linux-gnu[^/]*)?/?$", dirs)
   Sys.setenv(LD_LIBRARY_PATH = paste(dirs[!system_dir], collapse = ":"))
   function() Sys.setenv(LD_LIBRARY_PATH = old)
+}
+
+# JuliaCall::julia_setup() installs a missing Julia and embeds it in one call, so on Linux
+# the install happens here, leaving room to load libunwind before Julia starts.
+setup_julia <- function(JULIA_HOME = NULL, ..., version = "latest"){
+  if (Sys.info()[["sysname"]] == "Linux") {
+    bindir <- julia_bindir(JULIA_HOME)
+    # a Julia that is already running needs no install, even if it is not discoverable
+    if (is.null(bindir) && is.null(JULIA_HOME) && !any(startsWith(names(getLoadedDLLs()), "libjulia"))) {
+      JuliaCall::install_julia(version)
+      bindir <- julia_bindir()
+      if (is.null(bindir)) stop("Julia is not found and automatic installation failed.")
+    }
+    if (!is.null(bindir)) JULIA_HOME <- bindir
+    preload_julia_libunwind(JULIA_HOME)
+  }
+  JuliaCall::julia_setup(JULIA_HOME = JULIA_HOME, installJulia = TRUE, version = version, ...)
 }
 
 # The embedded Julia uses R's loader, which read LD_LIBRARY_PATH at R's startup,

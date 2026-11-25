@@ -25,6 +25,11 @@ DelayDiffEq.jl are installed and loaded as well.
 functions. For example, de$solve calls the DifferentialEquations.solve function,
 and de$ODEProblem calls the DifferentialEquations.}
 \details{
+On Linux, the \code{libunwind} that Julia ships with is loaded into R before
+Julia starts, installing Julia first if none is found. A Julia already started
+in the session, e.g. by \code{JuliaCall::julia_setup()}, keeps the unwinder it
+started with.
+
 With DifferentialEquations.jl v8 the returned object exposes fewer names than
 with v7: for example \code{Rodas5}, \code{RK4}, \code{QNDF},
 \code{JumpProblem} and \code{PresetTimeCallback} are not available through

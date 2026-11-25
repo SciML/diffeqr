@@ -36,13 +36,15 @@ Ensembles with SciMLBase.jl 2 and 3:
   DifferentialEquations 8.0. `ctx` is an `EnsembleContext`; ``ctx$`repeat` `` is the repeat count.
   A `function (prob, ...)` that only uses `prob` works with both.
 
-Fix segfaults on Linux systems with `libunwind` installed: `diffeq_setup()` and
-`diffeqgpu_setup()` load the `libunwind` that Julia ships with into R. While these functions and
-`jitoptimize_ode()` / `jitoptimize_sde()` run, the default system library directories are left out
-of `LD_LIBRARY_PATH`, so that Julia processes started by them use Julia's `libunwind` too. The value
-of `LD_LIBRARY_PATH` is restored when they return, including on error. Julia processes started at
-other times, such as package precompilation triggered by your own `JuliaCall` calls, inherit your
-`LD_LIBRARY_PATH` and can segfault; the example above shows how to avoid this.
+Fix segfaults on Linux systems with `libunwind` installed: `diffeq_setup()` and `diffeqgpu_setup()`
+load the `libunwind` that Julia ships with into R. `diffeq_setup()` does so before Julia starts,
+installing Julia first if none is found; `diffeqgpu_setup()` does so when Julia is already
+installed. A Julia already started in the session keeps the unwinder it started with. While these
+functions and `jitoptimize_ode()` / `jitoptimize_sde()` run, the default system library directories
+are left out of `LD_LIBRARY_PATH`, so that Julia processes started by them use Julia's `libunwind`
+too. The value of `LD_LIBRARY_PATH` is restored when they return, including on error. Julia
+processes started at other times, such as package precompilation triggered by your own `JuliaCall`
+calls, inherit your `LD_LIBRARY_PATH` and can segfault; the example above shows how to avoid this.
 
 ## Release v2.1.0
 
