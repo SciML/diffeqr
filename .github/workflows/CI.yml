@@ -37,6 +37,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends libcurl4-openssl-dev libuv1-dev locales
+          # a system libunwind is what diffeq_setup() has to keep Julia from loading
+          sudo apt-get install -y libunwind8
           # R CMD check warns without this locale, which some runner images lack
           sudo locale-gen en_US.UTF-8
 
