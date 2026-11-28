@@ -1,6 +1,6 @@
 # For help debugging build failures open an issue on the RStudio community with the 'github-actions' tag.
 # https://community.rstudio.com/new-topic?category=Package%20development&tags=github-actions
-on: 
+on:
   push:
   pull_request:
 name: R-CMD-check
@@ -20,6 +20,9 @@ jobs:
           - {os: ubuntu-latest, r: 'release'}
           - {os: ubuntu-latest, r: 'devel'}
 
+    env:
+      JULIA_PROJECT: ${{ github.workspace }}/.github/ci-julia
+
     steps:
       - uses: actions/checkout@v4
 
@@ -29,24 +32,34 @@ jobs:
 
       - uses: r-lib/actions/setup-pandoc@v2
 
+      - name: Install Linux system dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libcurl4-openssl-dev libuv1-dev locales
+          # a system libunwind is what diffeq_setup() has to keep Julia from loading
+          sudo apt-get install -y libunwind8
+          # R CMD check warns without this locale, which some runner images lack
+          sudo locale-gen en_US.UTF-8
+
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: any::rcmdcheck
           needs: check
 
       - uses: julia-actions/setup-julia@v3
+        id: julia
         with:
           version: '1.10'
 
-      # R's default puts the system library directory on LD_LIBRARY_PATH, which
-      # overrides Julia's RUNPATH: Julia 1.10 then loads the system libunwind.so.8
-      # instead of its bundled one and segfaults inside julia_setup().
-      - name: Keep system libraries from shadowing Julia's
-        if: runner.os == 'Linux'
-        run: echo "R_LD_LIBRARY_PATH=$(R RHOME)/lib" >> "$GITHUB_ENV"
+      - name: Instantiate Julia test dependencies
+        run: julia --startup-file=no -e 'using Pkg; Pkg.instantiate(); Pkg.status()'
+        shell: bash
 
       - name: Check
         env:
+          JULIA_HOME: ${{ steps.julia.outputs.julia-bindir }}
+          NOT_CRAN: 'true'
           _R_CHECK_CRAN_INCOMING_REMOTE_: false
         run: rcmdcheck::rcmdcheck(args = c("--no-manual", "--as-cran", "--no-multiarch"), error_on = "warning", check_dir = "check")
         shell: Rscript {0}

@@ -1,0 +1,3 @@
+# `parms` is an argument name of deSolve::ode
+[default.extend-identifiers]
+parms = "parms"

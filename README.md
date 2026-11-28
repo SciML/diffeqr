@@ -503,16 +503,33 @@ Let's build an ensemble by utilizing uniform random numbers to randomize the
 initial conditions and parameters:
 
 ```R
-prob_func <- function (prob,i,rep){
+prob_func <- function (prob,...){
   de$remake(prob,u0=runif(3)*u0,p=runif(3)*p)
 }
 ensembleprob = de$EnsembleProblem(fastprob, prob_func = prob_func, safetycopy=FALSE)
 ```
 
-Now we solve the ensemble in serial:
+`prob_func` is called for each trajectory and returns the problem to solve. The
+arguments it receives depend on the version of SciMLBase.jl, which
+`JuliaCall::julia_eval("pkgversion(SciMLBase)")` shows. With SciMLBase 3,
+`prob_func` receives `(prob, ctx)` and the trajectory index is `ctx$sim_id`.
+With SciMLBase 2, it receives `(prob, i, rep)`, including when used with
+DifferentialEquations 8.0. The function above only uses `prob`, so it takes
+`...` for the rest and works with both. A `prob_func` that depends on the index
+is written like this with SciMLBase 3:
 
 ```R
-sol = de$solve(ensembleprob,de$Tsit5(),de$EnsembleSerial(),trajectories=10000,saveat=0.01)
+prob_func_by_index <- function (prob,ctx){
+  de$remake(prob,u0=ctx$sim_id/10000*u0)
+}
+```
+
+Now we solve the ensemble in serial. `trajectories` must be an R integer, such
+as `10000L`: a plain `10000` is a double, which SciMLBase 3
+rejects.
+
+```R
+sol = de$solve(ensembleprob,de$Tsit5(),de$EnsembleSerial(),trajectories=10000L,saveat=0.01)
 ```
 
 To add GPUs to the mix, we need to bring in [DiffEqGPU](https://github.com/SciML/DiffEqGPU.jl).
@@ -530,7 +547,7 @@ GPU-specialized ODE solver `GPUTsit5()` to solve 10,000 ODEs on the GPU in
 parallel:
 
 ```R
-sol <- de$solve(ensembleprob,degpu$GPUTsit5(),degpu$EnsembleGPUKernel(degpu$CUDABackend()),trajectories=10000,saveat=0.01)
+sol <- de$solve(ensembleprob,degpu$GPUTsit5(),degpu$EnsembleGPUKernel(degpu$CUDABackend()),trajectories=10000L,saveat=0.01)
 ```
 
 For the full list of choices for specialized GPU solvers, see 
@@ -539,7 +556,7 @@ For the full list of choices for specialized GPU solvers, see
 Note that `EnsembleGPUArray` can be used as well, like:
 
 ```R
-sol <- de$solve(ensembleprob,de$Tsit5(),degpu$EnsembleGPUArray(degpu$CUDABackend()),trajectories=10000,saveat=0.01)
+sol <- de$solve(ensembleprob,de$Tsit5(),degpu$EnsembleGPUArray(degpu$CUDABackend()),trajectories=10000L,saveat=0.01)
 ```
 
 though we highly recommend the `EnsembleGPUKernel` methods for more speed. Given
@@ -588,7 +605,7 @@ Using `lapply` to generate the ensemble we get:
 Now let's see how the JIT-accelerated serial Julia version stacks up against that:
 
 ```
-> system.time({ de$solve(ensembleprob,de$Tsit5(),de$EnsembleSerial(),trajectories=1000,saveat=0.01) })
+> system.time({ de$solve(ensembleprob,de$Tsit5(),de$EnsembleSerial(),trajectories=1000L,saveat=0.01) })
    user  system elapsed
    2.75    0.30    3.08
 ```
@@ -597,7 +614,7 @@ Julia is already about 73x faster than the pure R solvers here! Now let's add
 GPU-acceleration to the mix:
 
 ```
-> system.time({ de$solve(ensembleprob,degpu$GPUTsit5(),degpu$EnsembleGPUKernel(degpu$CUDABackend()),trajectories=1000,saveat=0.01) })
+> system.time({ de$solve(ensembleprob,degpu$GPUTsit5(),degpu$EnsembleGPUKernel(degpu$CUDABackend()),trajectories=1000L,saveat=0.01) })
    user  system elapsed 
    0.11    0.00    0.12
 ```
@@ -608,18 +625,19 @@ trajectories from R because that would take too much computing power, so let's
 see what happens to the Julia serial and GPU at 10,000 trajectories:
 
 ```
-> system.time({ de$solve(ensembleprob,de$Tsit5(),de$EnsembleSerial(),trajectories=10000,saveat=0.01) })
+> system.time({ de$solve(ensembleprob,de$Tsit5(),de$EnsembleSerial(),trajectories=10000L,saveat=0.01) })
    user  system elapsed
   35.02    4.19   39.25
 ```
 
 ```
-> system.time({ de$solve(ensembleprob,degpu$GPUTsit5(),degpu$EnsembleGPUKernel(degpu$CUDABackend()),trajectories=10000,saveat=0.01) })
+> system.time({ de$solve(ensembleprob,degpu$GPUTsit5(),degpu$EnsembleGPUKernel(degpu$CUDABackend()),trajectories=10000L,saveat=0.01) })
    user  system elapsed 
    1.22    0.23    1.50 
 ```
 
-To compare this to the pure Julia code:
+To compare this to the pure Julia code (this `prob_func` only uses `prob`, so it
+takes `args...` for the rest and works with SciMLBase 2 and 3):
 
 ```julia
 using OrdinaryDiffEq, DiffEqGPU, CUDA, StaticArrays
@@ -637,7 +655,7 @@ u0 = SA[1.0f0; 0.0f0; 0.0f0]
 tspan = (0.0f0, 10.0f0)
 p = SA[10.0f0, 28.0f0, 8 / 3.0f0]
 prob = ODEProblem{false}(lorenz, u0, tspan, p)
-prob_func = (prob, i, repeat) -> remake(prob, p = (@SVector rand(Float32, 3)) .* p)
+prob_func = (prob, args...) -> remake(prob, p = (@SVector rand(Float32, 3)) .* p)
 monteprob = EnsembleProblem(prob, prob_func = prob_func, safetycopy = false)
 @time sol = solve(monteprob, GPUTsit5(), EnsembleGPUKernel(CUDA.CUDABackend()),
     trajectories = 10_000,
